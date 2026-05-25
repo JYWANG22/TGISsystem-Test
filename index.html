@@ -682,7 +682,7 @@ function renderDashboard() {
   document.getElementById('dash-recent').innerHTML = recent.length?recent.map(s=>`
     <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
       <div class="avatar" style="background:${avatarColor(s.first+s.last)};color:#fff;width:32px;height:32px;font-size:12px">${initials(s.first,s.last)}</div>
-      <div style="flex:1"><p style="font-size:13px;font-weight:500">${s.first} ${s.last}</p><p style="font-size:11px;color:var(--text3)">${gradeLabel(s.grade)} &middot; ${s.sid}</p></div>
+      <div style="flex:1"><p style="font-size:13px;font-weight:500">${[s.first,s.last].filter(Boolean).join(' ')}</p><p style="font-size:11px;color:var(--text3)">${gradeLabel(s.grade)} &middot; ${s.sid}</p></div>
       ${payBadge(s.payStatus)}
     </div>`).join(''):'<p style="color:var(--text2);font-size:13px">No students yet.</p>';
 }
@@ -703,7 +703,7 @@ function renderStudentTable() {
   const tbody = document.getElementById('student-tbody');
   tbody.innerHTML = list.length ? list.map(s=>`
     <tr>
-      <td><div class="cell-name"><div class="avatar" style="background:${avatarColor(s.first+s.last)};color:#fff">${initials(s.first,s.last)}</div><div><p style="font-weight:500">${s.first} ${s.last}</p><p style="font-size:11px;color:var(--text3)">${s.email||''}</p></div></div></td>
+      <td><div class="cell-name"><div class="avatar" style="background:${avatarColor(s.first+s.last)};color:#fff">${initials(s.first,s.last)}</div><div><p style="font-weight:500">${[s.first,s.last].filter(Boolean).join(' ')}</p><p style="font-size:11px;color:var(--text3)">${s.email||s.phone||''}</p></div></div></td>
       <td style="font-family:'DM Mono',monospace;font-size:12px">${s.sid||'—'}</td>
       <td>${gradeLabel(s.grade)}</td>
       <td>${s.class||'—'}</td>
@@ -748,7 +748,7 @@ function renderAttendance() {
   document.getElementById('att-tbody').innerHTML = list.map(s=>{
     const r = att[s.id]||{status:'present',note:''};
     return `<tr>
-      <td><div class="cell-name"><div class="avatar" style="background:${avatarColor(s.first+s.last)};color:#fff;width:32px;height:32px;font-size:12px">${initials(s.first,s.last)}</div>${s.first} ${s.last}</div></td>
+      <td><div class="cell-name"><div class="avatar" style="background:${avatarColor(s.first+s.last)};color:#fff;width:32px;height:32px;font-size:12px">${initials(s.first,s.last)}</div>${[s.first,s.last].filter(Boolean).join(' ')}</div></td>
       <td>${gradeLabel(s.grade)}</td>
       <td>${s.class||'—'}</td>
       <td>
@@ -812,7 +812,7 @@ function renderPaymentTable() {
   const bal=s=>Math.max(0,(s.total||0)-(s.paid||0));
   document.getElementById('pay-tbody').innerHTML=list.length?list.map(s=>`
     <tr>
-      <td><div class="cell-name"><div class="avatar" style="background:${avatarColor(s.first+s.last)};color:#fff;width:32px;height:32px;font-size:12px">${initials(s.first,s.last)}</div>${s.first} ${s.last}</div></td>
+      <td><div class="cell-name"><div class="avatar" style="background:${avatarColor(s.first+s.last)};color:#fff;width:32px;height:32px;font-size:12px">${initials(s.first,s.last)}</div>${[s.first,s.last].filter(Boolean).join(' ')}</div></td>
       <td>${gradeLabel(s.grade)}</td>
       <td style="text-transform:capitalize">${s.feeType||'—'}</td>
       <td>${fmtMoney(s.total)}</td>
@@ -877,7 +877,7 @@ function renderReports() {
   document.getElementById('rep-reminders').innerHTML=need.length?need.map(s=>`
     <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
       <div>
-        <p style="font-size:13px;font-weight:500">${s.first} ${s.last} &middot; ${gradeLabel(s.grade)}</p>
+        <p style="font-size:13px;font-weight:500">${[s.first,s.last].filter(Boolean).join(' ')} &middot; ${gradeLabel(s.grade)}</p>
         <p style="font-size:11px;color:var(--text2);margin-top:2px">${payBadge(s.payStatus)} Balance: ${fmtMoney(Math.max(0,(s.total||0)-(s.paid||0)))} &middot; Due: ${s.due||'not set'} &middot; ${s.phone||'no phone'}</p>
       </div>
       <button class="btn btn-sm" onclick="logReminder(${s.id},this)">Mark reminded</button>
@@ -931,7 +931,7 @@ function saveStudent() {
 
 function deleteStudent(id) {
   const s=db.students.find(x=>x.id===id);
-  if(!confirm(`Remove ${s.first} ${s.last}? This cannot be undone.`)) return;
+  if(!confirm(`Remove ${[s.first,s.last].filter(Boolean).join(' ')}? This cannot be undone.`)) return;
   db.students=db.students.filter(x=>x.id!==id);
   saveDB(); renderStudentTable();
 }
@@ -940,7 +940,7 @@ function deleteStudent(id) {
 function openPayModal(id) {
   editPayId=id;
   const s=db.students.find(x=>x.id===id);
-  document.getElementById('pmodal-title').textContent=`Payment — ${s.first} ${s.last}`;
+  document.getElementById('pmodal-title').textContent=`Payment — ${[s.first,s.last].filter(Boolean).join(' ')}`;
   document.getElementById('pf-total').value=s.total||'';
   document.getElementById('pf-paid').value=s.paid||'';
   document.getElementById('pf-status').value=s.payStatus||'unpaid';
@@ -977,7 +977,7 @@ function openProfile(id) {
     <div class="profile-header">
       <div class="profile-avatar" style="background:${color};color:#fff">${initials(s.first,s.last)}</div>
       <div class="profile-meta">
-        <h2>${s.first} ${s.last}</h2>
+        <h2>${[s.first,s.last].filter(Boolean).join(' ')}</h2>
         <p>${s.sid||'No ID'} &middot; ${gradeLabel(s.grade)} &middot; ${s.class||'No class'} &middot; ${statusBadge(s.status)}</p>
         <p style="margin-top:6px">${s.teacher?'Teacher: '+s.teacher:''}</p>
       </div>
@@ -1171,9 +1171,10 @@ function importExcel(input) {
         const name = String(getVal(row, map.studentName)).trim();
         if (!name || name.toLowerCase()==='student name') { skipped++; return; }
 
-        const parts = name.trim().split(/\s+/);
-        const first = parts[0] || name;
-        const last = parts.slice(1).join(' ') || '';
+        // Handle full name - split into first and last
+        const nameParts = name.trim().split(/\s+/);
+        const first = nameParts.length > 1 ? nameParts.slice(0, -1).join(' ') : nameParts[0];
+        const last = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
 
         const gradeRaw = getVal(row, map.grade) || getVal(row, map.gradePrev);
         const grade = parseGrade(gradeRaw);
@@ -1260,7 +1261,7 @@ function importExcel(input) {
       document.getElementById('import-result-skipped').textContent = skipped;
       document.getElementById('import-preview-body').innerHTML = preview.slice(0,10).map(s=>`
         <tr>
-          <td>${s.first} ${s.last}</td>
+          <td>${[s.first,s.last].filter(Boolean).join(' ')}</td>
           <td>${s.sid}</td>
           <td>${gradeLabel(s.grade)}</td>
           <td>${s.phone||'—'}</td>
