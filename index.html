@@ -1089,7 +1089,7 @@ function importExcel(input) {
   reader.onload = function(e) {
     try {
       const data = e.target.result;
-      const wb = XLSX.read(data, {type:'array', cellDates:true});
+      const wb = XLSX.read(data, {type:'binary', cellDates:true});
       const ws = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws, {defval:''});
 
@@ -1273,7 +1273,7 @@ function importExcel(input) {
       input.value='';
     }
   };
-  reader.readAsArrayBuffer(file);
+  reader.readAsBinaryString(file);
 }
 
 // ── Init ───────────────────────────────────────────────────────────────────
