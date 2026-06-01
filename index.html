@@ -1089,172 +1089,150 @@ function importExcel(input) {
   reader.onload = function(e) {
     try {
       const data = e.target.result;
-      const wb = XLSX.read(data, {type:'binary', cellDates:true});
+      const wb = XLSX.read(data, {type:'binary', cellDates:true, cellFormula:false, sheetStubs:true});
+      // Use first sheet
       const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(ws, {defval:''});
 
-      if (!rows.length) { alert('No data rows found in the file. Please check your Excel file has data below the header row.'); input.value=''; return; }
+      // Read as array of arrays to handle multi-row headers
+      const allRows = XLSX.utils.sheet_to_json(ws, {header:1, defval:'', blankrows:true});
 
-      // Column mapping from your Raw_File.xlsx headers → system fields
-      const map = {
-        studentName:   ['Student Name','student name','Name'],
-        nickName:      ['Nick Name','Nickname','Nick'],
-        sid:           ['Student ID','StudentID','student id'],
-        nameKhmer:     ['Name In Khmer','Khmer Name'],
-        dob:           ['Date of Birth','DOB','Birthday'],
-        nationality:   ['Nationality'],
-        gender:        ['Gender','Sex'],
-        source:        ['Source'],
-        gradePrev:     ['Grade in AY 24 - 25','Previous Grade','Grade AY24-25'],
-        grade:         ['Class for AY 25 -26','Grade','Class for AY 25-26','Current Grade','Class'],
-        total:         ['Annual School Fee','Annual Fee','School Fee'],
-        paymentTerm:   ['Payment Term'],
-        feeByTerm:     ['School Fee by payment Term','Fee by Term'],
-        feeProrated:   ['School fee prorated','Prorated Fee'],
-        discountPct:   ['Discount %','Discount'],
-        feeAfterDisc:  ['School Fee after Discount','Fee after Discount'],
-        capitalFee:    ['Capital Fee'],
-        lunchTerm:     ['Lunch Term'],
-        lunchFee:      ['Lunch Fee by payment term','Lunch Fee'],
-        registrationFee:['Registration Fee','Reg Fee'],
-        startDate:     ['Starting Date','Start Date'],
-        payDate:       ['Date of Payment','Payment Date'],
-        busFee:        ['School bus fee by payment term','Bus Fee'],
-        accountMgr:    ['Account Manager'],
-        remarks:       ['Remarks','Notes'],
-        shift:         ['Shift'],
-        category:      ['Category'],
-        docNotes:      ['Student Passport / Birth Certificate','Documents'],
-        phone:         ['Contact number','Contact Number','Phone'],
-        motherName:    ['Mother name','Mother Name'],
-        motherPassport:['Mother\' Passport','Mother Passport'],
-        motherPhone:   ['Mother contact number','Mother Phone'],
-        motherOcc:     ['Mother Occupation','Mother Occupation '],
-        fatherName:    ['Father name','Father Name'],
-        fatherPassport:['Father\' Passport','Father Passport'],
-        fatherPhone:   ['Father contact number','Father Phone'],
-        fatherOcc:     ['Father occupation','Father Occupation'],
-        address:       ['Address'],
+      // Find header row — look for row containing 'Student name'
+      let headerRowIdx = -1;
+      for (let i = 0; i < Math.min(allRows.length, 10); i++) {
+        if (allRows[i].some(c => String(c).trim().toLowerCase() === 'student name')) {
+          headerRowIdx = i; break;
+        }
+      }
+      if (headerRowIdx === -1) {
+        alert('Cannot find "Student name" column. Please check your Excel file format.');
+        input.value=''; return;
+      }
+
+      const headers = allRows[headerRowIdx].map(h => String(h).trim());
+
+      function colIdx(names) {
+        for (const n of names) {
+          const i = headers.findIndex(h => h.toLowerCase() === n.toLowerCase());
+          if (i >= 0) return i;
+        }
+        return -1;
+      }
+
+      const COL = {
+        name:      colIdx(['Student name','Student Name','Name']),
+        sid:       colIdx(['Student ID','StudentID']),
+        gender:    colIdx(['Gender']),
+        gradePrev: colIdx(['Grade AY25-26','Grade in AY 24 - 25']),
+        grade:     colIdx(['Grade AY26-27','Class for AY 25 -26','Grade AY26-27']),
+        shift:     colIdx(['Shift']),
+        campus:    colIdx(['Campus','Category']),
+        source:    colIdx(['Source']),
+        payMode:   colIdx(['Payment Mode','Payment Term']),
+        yearlyFee: colIdx(['Yearly Tuition Fee','Annual School Fee']),
+        netFee:    colIdx(['Net Tuition Fee','School Fee after Discount']),
+        capitalFee:colIdx(['Capital Fee by payment mode','Capital Fee']),
+        lunchFee:  colIdx(['Lunch Fee']),
+        busFee:    colIdx(['Bus Fee']),
+        netCollect:colIdx(['Net Fee to Collect']),
+        discPct:   colIdx(['Discount on Tuition Fee (%)','Discount %']),
+        remark:    colIdx(['Remark','Remarks']),
       };
 
-      function getVal(row, keys) {
-        for (const k of keys) { if (row[k] !== undefined && row[k] !== '') return row[k]; }
-        return '';
-      }
-
-      function parseGrade(raw) {
-        if (!raw) return 'K';
-        const s = String(raw).trim().toUpperCase();
-        if (s==='K'||s==='KG'||s==='KINDERGARTEN') return 'K';
-        const m = s.match(/(\d+)/);
-        return m ? m[1] : 'K';
-      }
-
-      function parseDate(val) {
-        if (!val) return '';
-        if (val instanceof Date) return val.toISOString().split('T')[0];
-        const d = new Date(val);
-        if (!isNaN(d)) return d.toISOString().split('T')[0];
-        return String(val);
+      function getCell(row, idx) {
+        if (idx < 0 || idx >= row.length) return '';
+        const v = row[idx];
+        if (v === null || v === undefined) return '';
+        if (typeof v === 'string' && v.startsWith('=')) return '';
+        return v;
       }
 
       function parseMoney(val) {
         if (!val && val !== 0) return 0;
-        const n = parseFloat(String(val).replace(/[^0-9.]/g,''));
+        if (typeof val === 'number') return Math.round(val * 100) / 100;
+        const n = parseFloat(String(val).replace(/[^0-9.-]/g,''));
         return isNaN(n) ? 0 : n;
+      }
+
+      function parseGrade(raw) {
+        if (!raw) return 'K';
+        const s = String(raw).trim().toUpperCase().replace(/\u200B/g,'').replace(/[^A-Z0-9]/g,'');
+        if (!s || s==='K'||s==='KG'||s==='KINDERGARTEN'||s==='PP') return 'K';
+        const m = s.match(/(\d+)/);
+        return m ? m[1] : 'K';
       }
 
       let imported = 0, skipped = 0;
       const preview = [];
 
-      rows.forEach((row, idx) => {
-        const name = String(getVal(row, map.studentName)).trim();
-        if (!name || name.toLowerCase()==='student name') { skipped++; return; }
+      for (let i = headerRowIdx + 1; i < allRows.length; i++) {
+        const row = allRows[i];
+        const rawName = String(getCell(row, COL.name)).trim();
+        if (!rawName || rawName.toLowerCase()==='student name') { skipped++; continue; }
+        if (rawName.toLowerCase().includes('total') || rawName.toLowerCase().includes('subtotal')) { skipped++; continue; }
 
-        // Handle full name - split into first and last
-        const nameParts = name.trim().split(/\s+/);
-        const first = nameParts.length > 1 ? nameParts.slice(0, -1).join(' ') : nameParts[0];
-        const last = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+        const nameParts = rawName.split(/\s+/);
+        const first = nameParts.length > 1 ? nameParts.slice(0,-1).join(' ') : nameParts[0];
+        const last  = nameParts.length > 1 ? nameParts[nameParts.length-1] : '';
 
-        const gradeRaw = getVal(row, map.grade) || getVal(row, map.gradePrev);
-        const grade = parseGrade(gradeRaw);
-        const totalFee = parseMoney(getVal(row, map.total));
-        const feeAfterDisc = parseMoney(getVal(row, map.feeAfterDisc));
-        const effectiveFee = feeAfterDisc || totalFee;
+        const gradeRaw   = getCell(row, COL.grade) || getCell(row, COL.gradePrev);
+        const grade      = parseGrade(gradeRaw);
+        const yearlyFee  = parseMoney(getCell(row, COL.yearlyFee));
+        const netFee     = parseMoney(getCell(row, COL.netFee));
+        const netCollect = parseMoney(getCell(row, COL.netCollect));
+        const effectiveFee = netCollect || netFee || yearlyFee;
 
-        // Determine payment status
-        const paid = parseMoney(getVal(row, map.feeByTerm));
         let payStatus = 'unpaid';
-        if (paid >= effectiveFee && effectiveFee > 0) payStatus = 'paid';
-        else if (paid > 0) payStatus = 'partial';
+        if (netCollect === 0 && yearlyFee > 0) payStatus = 'paid';
+        else if (netCollect > 0 && netCollect < yearlyFee) payStatus = 'partial';
+        else payStatus = 'unpaid';
 
-        const sid = String(getVal(row, map.sid)).trim() || ('STU-'+String(nextId()+idx).padStart(3,'0'));
+        const sid = String(getCell(row, COL.sid)).trim() || ('STU-'+String(1000+imported+1));
         const existingIdx = db.students.findIndex(s => s.sid === sid);
 
         const student = {
-          id: existingIdx >= 0 ? db.students[existingIdx].id : nextId() + imported,
+          id:         existingIdx >= 0 ? db.students[existingIdx].id : nextId() + imported,
           first, last,
-          nickName:    String(getVal(row, map.nickName)),
-          nameKhmer:   String(getVal(row, map.nameKhmer)),
-          dob:         parseDate(getVal(row, map.dob)),
-          nationality: String(getVal(row, map.nationality)),
-          gender:      String(getVal(row, map.gender)),
-          source:      String(getVal(row, map.source)),
-          sid,
-          status:      'active',
+          nickName:'', nameKhmer:'', dob:'', nationality:'',
+          gender:     String(getCell(row, COL.gender)),
+          source:     String(getCell(row, COL.source)),
+          sid, status:'active',
           grade,
-          class:       String(gradeRaw).trim(),
-          enroll:      parseDate(getVal(row, map.startDate)),
-          teacher:     String(getVal(row, map.accountMgr)),
-          shift:       String(getVal(row, map.shift)),
-          category:    String(getVal(row, map.category)),
-          address:     String(getVal(row, map.address)),
-          phone:       String(getVal(row, map.phone)),
-          // Parent - Mother
-          parent:      String(getVal(row, map.motherName)),
-          rel:         'Mother',
-          email:       '',
-          motherName:  String(getVal(row, map.motherName)),
-          motherPhone: String(getVal(row, map.motherPhone)),
-          motherOcc:   String(getVal(row, map.motherOcc)),
-          motherPassport: String(getVal(row, map.motherPassport)),
-          // Father
-          fatherName:  String(getVal(row, map.fatherName)),
-          fatherPhone: String(getVal(row, map.fatherPhone)),
-          fatherOcc:   String(getVal(row, map.fatherOcc)),
-          fatherPassport: String(getVal(row, map.fatherPassport)),
-          // Emergency
-          emerName:    String(getVal(row, map.fatherName)),
-          emerPhone:   String(getVal(row, map.fatherPhone)),
-          emerRel:     'Father',
-          medical:     '',
-          // Payment
-          feeType:     'tuition',
-          total:       effectiveFee,
-          paid:        paid,
+          class:      String(gradeRaw).trim().replace(/\u200B/g,''),
+          enroll:'', teacher:'',
+          shift:      String(getCell(row, COL.shift)),
+          category:   String(getCell(row, COL.campus)),
+          address:'', phone:'', parent:'', rel:'', email:'',
+          motherName:'', motherPhone:'', motherOcc:'', motherPassport:'',
+          fatherName:'', fatherPhone:'', fatherOcc:'', fatherPassport:'',
+          emerName:'', emerPhone:'', emerRel:'', medical:'',
+          feeType:    'tuition',
+          total:      effectiveFee,
+          paid:       payStatus==='paid' ? effectiveFee : 0,
           payStatus,
-          due:         parseDate(getVal(row, map.payDate)),
-          payDate:     parseDate(getVal(row, map.payDate)),
-          payNotes:    String(getVal(row, map.remarks)),
-          docNotes:    String(getVal(row, map.docNotes)),
-          // Extra fee fields
-          capitalFee:  parseMoney(getVal(row, map.capitalFee)),
-          lunchFee:    parseMoney(getVal(row, map.lunchFee)),
-          busFee:      parseMoney(getVal(row, map.busFee)),
-          registrationFee: parseMoney(getVal(row, map.registrationFee)),
-          discountPct: String(getVal(row, map.discountPct)),
-          paymentTerm: String(getVal(row, map.paymentTerm)),
-          grades:      {math:0,eng:0,sci:0,hist:0,art:0,pe:0},
+          due:'', payDate:'',
+          payNotes:   String(getCell(row, COL.remark)),
+          docNotes:'',
+          capitalFee: parseMoney(getCell(row, COL.capitalFee)),
+          lunchFee:   parseMoney(getCell(row, COL.lunchFee)),
+          busFee:     parseMoney(getCell(row, COL.busFee)),
+          discountPct:String(getCell(row, COL.discPct)),
+          paymentTerm:String(getCell(row, COL.payMode)),
+          grades:{math:0,eng:0,sci:0,hist:0,art:0,pe:0},
         };
 
         if (existingIdx >= 0) { db.students[existingIdx] = student; }
         else { db.students.push(student); }
         preview.push(student);
         imported++;
-      });
+      }
 
       saveDB();
-      input.value = '';
+      input.value='';
+
+      if (imported === 0) {
+        alert('No students imported. Check that your Excel file has student data rows.');
+        return;
+      }
 
       // Show result modal
       document.getElementById('import-result-count').textContent = imported;
