@@ -235,18 +235,28 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--text2
     <!-- DASHBOARD -->
     <div class="view active" id="view-dashboard">
       <div class="card-grid" id="dash-metrics"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px">
-        <div class="card">
-          <div style="font-size:13px;font-weight:600;margin-bottom:14px;color:var(--text2)">Payment status</div>
-          <div id="dash-pay-chart"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:20px">
+        <div class="card" style="display:flex;flex-direction:column;align-items:center">
+          <div style="font-size:13px;font-weight:600;margin-bottom:4px;color:var(--text2);align-self:flex-start">Payment Collection</div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:12px;align-self:flex-start">Student payment status breakdown</div>
+          <canvas id="chart-payment" width="200" height="200"></canvas>
+          <div id="legend-payment" style="margin-top:14px;width:100%"></div>
         </div>
-        <div class="card">
-          <div style="font-size:13px;font-weight:600;margin-bottom:14px;color:var(--text2)">Today's attendance</div>
-          <div id="dash-att-chart"></div>
+        <div class="card" style="display:flex;flex-direction:column;align-items:center">
+          <div style="font-size:13px;font-weight:600;margin-bottom:4px;color:var(--text2);align-self:flex-start">Enrollment by Grade</div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:12px;align-self:flex-start">Number of active students per grade</div>
+          <canvas id="chart-enrollment" width="200" height="200"></canvas>
+          <div id="legend-enrollment" style="margin-top:14px;width:100%"></div>
+        </div>
+        <div class="card" style="display:flex;flex-direction:column;align-items:center">
+          <div style="font-size:13px;font-weight:600;margin-bottom:4px;color:var(--text2);align-self:flex-start">Outstanding Balance</div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:12px;align-self:flex-start">Unpaid fees by grade</div>
+          <canvas id="chart-balance" width="200" height="200"></canvas>
+          <div id="legend-balance" style="margin-top:14px;width:100%"></div>
         </div>
       </div>
       <div class="card">
-        <div style="font-size:13px;font-weight:600;margin-bottom:14px;color:var(--text2)">Recent activity</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:14px;color:var(--text2)">Recent students</div>
         <div id="dash-recent"></div>
       </div>
     </div>
@@ -257,8 +267,10 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--text2
         <div class="table-toolbar">
           <div class="search-wrap">
             <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" id="student-search" placeholder="Search by name, ID, grade…" oninput="renderStudentTable()">
+            <input type="text" id="student-search" placeholder="Search by name, ID, grade…" onkeydown="if(event.key==='Enter')renderStudentTable()">
           </div>
+          <button class="btn btn-sm btn-primary" onclick="renderStudentTable()" style="white-space:nowrap"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Search</button>
+          <button class="btn btn-sm" onclick="clearStudentFilters()" style="white-space:nowrap">✕ Clear</button>
           <select id="student-filter-grade" onchange="renderStudentTable()" style="width:auto">
             <option value="">All grades</option>
           </select>
@@ -445,6 +457,40 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--text2
         <div style="font-size:15px;font-weight:600;margin-bottom:6px">Promotion history</div>
         <div id="promo-history" style="font-size:13px;color:var(--text2)">No promotions recorded yet.</div>
       </div>
+
+      <!-- BACKUP & RESTORE -->
+      <div class="card" style="margin-top:18px">
+        <div style="font-size:15px;font-weight:600;margin-bottom:6px">Backup &amp; Restore</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:18px;line-height:1.6">
+          Your data is stored in this browser. Use <strong>Backup</strong> to save a copy to your computer, and <strong>Restore</strong> to reload it on any device. Always backup before making major changes.
+        </p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
+          <div class="section-card">
+            <h4 style="margin-bottom:8px">📥 Backup data</h4>
+            <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5">Downloads all students, payments, attendance and settings as a <strong>.json</strong> file to your computer.</p>
+            <button class="btn btn-primary" onclick="backupData()" style="width:100%">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download backup
+            </button>
+          </div>
+          <div class="section-card">
+            <h4 style="margin-bottom:8px">📤 Restore data</h4>
+            <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5">Upload a previously saved <strong>.json</strong> backup file to restore all data. <span style="color:var(--danger);font-weight:500">This will overwrite current data.</span></p>
+            <button class="btn" onclick="document.getElementById('restore-input').click()" style="width:100%">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Upload backup file
+            </button>
+            <input type="file" id="restore-input" accept=".json" style="display:none" onchange="restoreData(this)">
+          </div>
+        </div>
+
+        <div class="section-card" id="backup-status-card">
+          <h4 style="margin-bottom:10px">Backup status</h4>
+          <div id="backup-status"></div>
+        </div>
+      </div>
+
     </div>
 
   </div>
@@ -486,13 +532,16 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--text2
         <div class="form-row">
           <div class="field"><label class="field-label">Grade *</label>
             <select id="sf-grade">
-              <option value="K">Kindergarten</option>
-              <option value="1">Grade 1</option><option value="2">Grade 2</option>
-              <option value="3">Grade 3</option><option value="4">Grade 4</option>
-              <option value="5">Grade 5</option><option value="6">Grade 6</option>
-              <option value="7">Grade 7</option><option value="8">Grade 8</option>
-              <option value="9">Grade 9</option><option value="10">Grade 10</option>
-              <option value="11">Grade 11</option><option value="12">Grade 12</option>
+              <option value="PN">Pre-Nursery</option>
+              <option value="N">Nursery</option>
+              <option value="K1">Kindergarten 1</option>
+              <option value="K2">Kindergarten 2</option>
+              <option value="G1">Grade 1</option><option value="G2">Grade 2</option>
+              <option value="G3">Grade 3</option><option value="G4">Grade 4</option>
+              <option value="G5">Grade 5</option><option value="G6">Grade 6</option>
+              <option value="G7">Grade 7</option><option value="G8">Grade 8</option>
+              <option value="G9">Grade 9</option><option value="G10">Grade 10</option>
+              <option value="G11">Grade 11</option><option value="G12">Grade 12</option>
             </select>
           </div>
           <div class="field"><label class="field-label">Class / Section</label><input type="text" id="sf-class" placeholder="e.g. 5-A, Room 12"></div>
@@ -654,18 +703,27 @@ function today() { return new Date().toISOString().split('T')[0]; }
 function pastDate(n) { const d=new Date(); d.setDate(d.getDate()-n); return d.toISOString().split('T')[0]; }
 function futureDate(n) { const d=new Date(); d.setDate(d.getDate()+n); return d.toISOString().split('T')[0]; }
 function nextId() { return db.students.length ? Math.max(...db.students.map(s=>s.id||0))+1 : 1001; }
-function gradeLabel(g) { return g==='K'?'Kindergarten':'Grade '+g; }
+function gradeLabel(g) {
+  const labels = {
+    'PN':'Pre-Nursery','N':'Nursery',
+    'K1':'Kindergarten 1','K2':'Kindergarten 2',
+    'G1':'Grade 1','G2':'Grade 2','G3':'Grade 3','G4':'Grade 4',
+    'G5':'Grade 5','G6':'Grade 6','G7':'Grade 7','G8':'Grade 8',
+    'G9':'Grade 9','G10':'Grade 10','G11':'Grade 11','G12':'Grade 12'
+  };
+  return labels[String(g).trim()] || g || '—';
+}
 
 function seedStudents() {
   return [
-    {id:1001,first:'Emma',last:'Johnson',dob:'2014-03-12',gender:'Female',address:'42 Maple St, Springfield',sid:'STU-001',status:'active',grade:'5',class:'5-A',enroll:pastDate(400),teacher:'Ms. Roberts',parent:'Sarah Johnson',rel:'Mother',phone:'(555) 234-5678',email:'sjohnson@email.com',emerName:'Tom Johnson',emerPhone:'(555) 234-9999',emerRel:'Father',medical:'Mild peanut allergy',feeType:'tuition',total:1200,paid:1200,payStatus:'paid',due:pastDate(10),payDate:pastDate(15),payNotes:'',docNotes:'Birth cert on file',grades:{math:92,eng:88,sci:90,hist:85,art:78,pe:95}},
-    {id:1002,first:'Liam',last:'Martinez',dob:'2016-07-22',gender:'Male',address:'15 Oak Ave, Riverside',sid:'STU-002',status:'active',grade:'3',class:'3-B',enroll:pastDate(300),teacher:'Mr. Davis',parent:'Carlos Martinez',rel:'Father',phone:'(555) 345-6789',email:'cmartinez@email.com',emerName:'Rosa Martinez',emerPhone:'(555) 345-1111',emerRel:'Mother',medical:'Asthma — inhaler on file',feeType:'tuition',total:1200,paid:600,payStatus:'partial',due:futureDate(5),payDate:pastDate(20),payNotes:'Second installment pending',docNotes:'',grades:{math:76,eng:82,sci:79,hist:80,art:90,pe:88}},
-    {id:1003,first:'Sophia',last:'Chen',dob:'2012-11-05',gender:'Female',address:'88 Pine Rd, Lakewood',sid:'STU-003',status:'active',grade:'7',class:'7-A',enroll:pastDate(500),teacher:'Ms. Patel',parent:'Wei Chen',rel:'Father',phone:'(555) 456-7890',email:'wchen@email.com',emerName:'Lin Chen',emerPhone:'(555) 456-2222',emerRel:'Mother',medical:'None',feeType:'tuition',total:1400,paid:0,payStatus:'overdue',due:pastDate(3),payDate:'',payNotes:'Parent contacted 2x',docNotes:'Medical form pending',grades:{math:95,eng:91,sci:96,hist:89,art:72,pe:80}},
-    {id:1004,first:'Noah',last:'Williams',dob:'2017-01-30',gender:'Male',address:'7 Elm St, Greenfield',sid:'STU-004',status:'active',grade:'2',class:'2-A',enroll:pastDate(200),teacher:'Ms. Taylor',parent:'James Williams',rel:'Father',phone:'(555) 567-8901',email:'jwilliams@email.com',emerName:'Anne Williams',emerPhone:'(555) 567-3333',emerRel:'Mother',medical:'None',feeType:'lunch',total:350,paid:350,payStatus:'paid',due:pastDate(30),payDate:pastDate(35),payNotes:'',docNotes:'All docs on file',grades:{math:85,eng:79,sci:82,hist:77,art:88,pe:92}},
-    {id:1005,first:'Olivia',last:'Brown',dob:'2010-09-14',gender:'Female',address:'33 Cedar Blvd, Hillside',sid:'STU-005',status:'active',grade:'9',class:'9-B',enroll:pastDate(600),teacher:'Mr. Wilson',parent:'Patricia Brown',rel:'Mother',phone:'(555) 678-9012',email:'pbrown@email.com',emerName:'Mark Brown',emerPhone:'(555) 678-4444',emerRel:'Father',medical:'Lactose intolerant',feeType:'activity',total:250,paid:0,payStatus:'unpaid',due:futureDate(14),payDate:'',payNotes:'',docNotes:'',grades:{math:88,eng:94,sci:86,hist:91,art:85,pe:78}},
-    {id:1006,first:'Aiden',last:'Davis',dob:'2013-05-18',gender:'Male',address:'21 Birch Lane, Maplewood',sid:'STU-006',status:'active',grade:'6',class:'6-A',enroll:pastDate(350),teacher:'Ms. Garcia',parent:'Helen Davis',rel:'Mother',phone:'(555) 789-0123',email:'hdavis@email.com',emerName:'Bob Davis',emerPhone:'(555) 789-5555',emerRel:'Father',medical:'None',feeType:'transport',total:800,paid:400,payStatus:'partial',due:futureDate(2),payDate:pastDate(8),payNotes:'',docNotes:'Birth cert on file',grades:{math:72,eng:75,sci:70,hist:74,art:80,pe:85}},
-    {id:1007,first:'Mia',last:'Thompson',dob:'2019-08-25',gender:'Female',address:'9 Walnut Dr, Fairview',sid:'STU-007',status:'active',grade:'K',class:'K-A',enroll:pastDate(150),teacher:'Ms. Anderson',parent:'Lucy Thompson',rel:'Mother',phone:'(555) 890-1234',email:'lthompson@email.com',emerName:'Dan Thompson',emerPhone:'(555) 890-6666',emerRel:'Father',medical:'None',feeType:'tuition',total:1100,paid:1100,payStatus:'paid',due:pastDate(20),payDate:pastDate(22),payNotes:'',docNotes:'All docs on file',grades:{math:88,eng:85,sci:82,hist:80,art:95,pe:90}},
-    {id:1008,first:'Ethan',last:'Garcia',dob:'2008-12-03',gender:'Male',address:'55 Spruce St, Riverside',sid:'STU-008',status:'active',grade:'11',class:'11-B',enroll:pastDate(700),teacher:'Mr. Lee',parent:'Maria Garcia',rel:'Mother',phone:'(555) 901-2345',email:'mgarcia@email.com',emerName:'Jose Garcia',emerPhone:'(555) 901-7777',emerRel:'Father',medical:'EpiPen on file — bee sting allergy',feeType:'tuition',total:1500,paid:0,payStatus:'overdue',due:pastDate(7),payDate:'',payNotes:'No response to calls',docNotes:'',grades:{math:65,eng:70,sci:68,hist:72,art:60,pe:75}},
+    {id:1001,first:'Emma',last:'Johnson',dob:'2014-03-12',gender:'Female',address:'42 Maple St, Springfield',sid:'STU-001',status:'active',grade:'G5',class:'G5-A',enroll:pastDate(400),teacher:'Ms. Roberts',parent:'Sarah Johnson',rel:'Mother',phone:'(555) 234-5678',email:'sjohnson@email.com',emerName:'Tom Johnson',emerPhone:'(555) 234-9999',emerRel:'Father',medical:'Mild peanut allergy',feeType:'tuition',total:1200,paid:1200,payStatus:'paid',due:pastDate(10),payDate:pastDate(15),payNotes:'',docNotes:'Birth cert on file',grades:{math:92,eng:88,sci:90,hist:85,art:78,pe:95}},
+    {id:1002,first:'Liam',last:'Martinez',dob:'2016-07-22',gender:'Male',address:'15 Oak Ave, Riverside',sid:'STU-002',status:'active',grade:'G3',class:'G3-B',enroll:pastDate(300),teacher:'Mr. Davis',parent:'Carlos Martinez',rel:'Father',phone:'(555) 345-6789',email:'cmartinez@email.com',emerName:'Rosa Martinez',emerPhone:'(555) 345-1111',emerRel:'Mother',medical:'Asthma — inhaler on file',feeType:'tuition',total:1200,paid:600,payStatus:'partial',due:futureDate(5),payDate:pastDate(20),payNotes:'Second installment pending',docNotes:'',grades:{math:76,eng:82,sci:79,hist:80,art:90,pe:88}},
+    {id:1003,first:'Sophia',last:'Chen',dob:'2012-11-05',gender:'Female',address:'88 Pine Rd, Lakewood',sid:'STU-003',status:'active',grade:'G7',class:'G7-A',enroll:pastDate(500),teacher:'Ms. Patel',parent:'Wei Chen',rel:'Father',phone:'(555) 456-7890',email:'wchen@email.com',emerName:'Lin Chen',emerPhone:'(555) 456-2222',emerRel:'Mother',medical:'None',feeType:'tuition',total:1400,paid:0,payStatus:'overdue',due:pastDate(3),payDate:'',payNotes:'Parent contacted 2x',docNotes:'Medical form pending',grades:{math:95,eng:91,sci:96,hist:89,art:72,pe:80}},
+    {id:1004,first:'Noah',last:'Williams',dob:'2017-01-30',gender:'Male',address:'7 Elm St, Greenfield',sid:'STU-004',status:'active',grade:'G2',class:'G2-A',enroll:pastDate(200),teacher:'Ms. Taylor',parent:'James Williams',rel:'Father',phone:'(555) 567-8901',email:'jwilliams@email.com',emerName:'Anne Williams',emerPhone:'(555) 567-3333',emerRel:'Mother',medical:'None',feeType:'lunch',total:350,paid:350,payStatus:'paid',due:pastDate(30),payDate:pastDate(35),payNotes:'',docNotes:'All docs on file',grades:{math:85,eng:79,sci:82,hist:77,art:88,pe:92}},
+    {id:1005,first:'Olivia',last:'Brown',dob:'2010-09-14',gender:'Female',address:'33 Cedar Blvd, Hillside',sid:'STU-005',status:'active',grade:'G9',class:'G9-B',enroll:pastDate(600),teacher:'Mr. Wilson',parent:'Patricia Brown',rel:'Mother',phone:'(555) 678-9012',email:'pbrown@email.com',emerName:'Mark Brown',emerPhone:'(555) 678-4444',emerRel:'Father',medical:'Lactose intolerant',feeType:'activity',total:250,paid:0,payStatus:'unpaid',due:futureDate(14),payDate:'',payNotes:'',docNotes:'',grades:{math:88,eng:94,sci:86,hist:91,art:85,pe:78}},
+    {id:1006,first:'Aiden',last:'Davis',dob:'2013-05-18',gender:'Male',address:'21 Birch Lane, Maplewood',sid:'STU-006',status:'active',grade:'G6',class:'G6-A',enroll:pastDate(350),teacher:'Ms. Garcia',parent:'Helen Davis',rel:'Mother',phone:'(555) 789-0123',email:'hdavis@email.com',emerName:'Bob Davis',emerPhone:'(555) 789-5555',emerRel:'Father',medical:'None',feeType:'transport',total:800,paid:400,payStatus:'partial',due:futureDate(2),payDate:pastDate(8),payNotes:'',docNotes:'Birth cert on file',grades:{math:72,eng:75,sci:70,hist:74,art:80,pe:85}},
+    {id:1007,first:'Mia',last:'Thompson',dob:'2019-08-25',gender:'Female',address:'9 Walnut Dr, Fairview',sid:'STU-007',status:'active',grade:'K1',class:'K1-A',enroll:pastDate(150),teacher:'Ms. Anderson',parent:'Lucy Thompson',rel:'Mother',phone:'(555) 890-1234',email:'lthompson@email.com',emerName:'Dan Thompson',emerPhone:'(555) 890-6666',emerRel:'Father',medical:'None',feeType:'tuition',total:1100,paid:1100,payStatus:'paid',due:pastDate(20),payDate:pastDate(22),payNotes:'',docNotes:'All docs on file',grades:{math:88,eng:85,sci:82,hist:80,art:95,pe:90}},
+    {id:1008,first:'Ethan',last:'Garcia',dob:'2008-12-03',gender:'Male',address:'55 Spruce St, Riverside',sid:'STU-008',status:'active',grade:'G11',class:'G11-B',enroll:pastDate(700),teacher:'Mr. Lee',parent:'Maria Garcia',rel:'Mother',phone:'(555) 901-2345',email:'mgarcia@email.com',emerName:'Jose Garcia',emerPhone:'(555) 901-7777',emerRel:'Father',medical:'EpiPen on file — bee sting allergy',feeType:'tuition',total:1500,paid:0,payStatus:'overdue',due:pastDate(7),payDate:'',payNotes:'No response to calls',docNotes:'',grades:{math:65,eng:70,sci:68,hist:72,art:60,pe:75}},
   ];
 }
 
@@ -725,56 +783,142 @@ function getGrades(s) {
 // ── Grade filters ──────────────────────────────────────────────────────────
 function populateGradeFilter(id) {
   const el = document.getElementById(id);
+  if (!el) return;
   const cur = el.value;
-  const grades = [...new Set(db.students.map(s=>s.grade))].sort((a,b)=>(a==='K'?-1:b==='K'?1:parseInt(a)-parseInt(b)));
+  const ORDER = ['PN','N','K1','K2','G1','G2','G3','G4','G5','G6','G7','G8','G9','G10','G11','G12'];
+  const present = new Set(db.students.map(s=>s.grade));
+  const grades = ORDER.filter(g => present.has(g));
+  // Also include any grades not in standard order
+  db.students.forEach(s=>{ if(!ORDER.includes(s.grade) && s.grade) grades.push(s.grade); });
   el.innerHTML = '<option value="">All grades</option>';
-  grades.forEach(g=>{const o=document.createElement('option');o.value=g;o.textContent=gradeLabel(g);if(g===cur)o.selected=true;el.appendChild(o);});
+  [...new Set(grades)].forEach(g=>{const o=document.createElement('option');o.value=g;o.textContent=gradeLabel(g);if(g===cur)o.selected=true;el.appendChild(o);});
 }
 
 // ── Dashboard ──────────────────────────────────────────────────────────────
+// ── Donut Chart Helper ─────────────────────────────────────────────────────
+function drawDonut(canvasId, legendId, segments, centerLabel) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cx = W/2, cy = H/2;
+  const R = Math.min(W,H)/2 - 10;
+  const r = R * 0.58;
+  ctx.clearRect(0, 0, W, H);
+
+  const total = segments.reduce((a,s)=>a+s.value,0);
+  if (total === 0) {
+    ctx.fillStyle = '#e2e0d8';
+    ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#9e9b92'; ctx.font = 'bold 13px DM Sans,sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('No data', cx, cy);
+    return;
+  }
+
+  let startAngle = -Math.PI / 2;
+  const gap = 0.03;
+  segments.forEach(seg => {
+    if (seg.value === 0) return;
+    const slice = (seg.value / total) * (Math.PI * 2 - gap * segments.length);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, R, startAngle + gap/2, startAngle + slice + gap/2);
+    ctx.closePath();
+    ctx.fillStyle = seg.color;
+    ctx.fill();
+    startAngle += slice + gap;
+  });
+
+  // Donut hole
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.fillStyle = '#ffffff'; ctx.fill();
+
+  // Center label
+  if (centerLabel) {
+    ctx.fillStyle = '#1a1917';
+    ctx.font = 'bold 16px DM Sans,sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(centerLabel.value, cx, cy - 8);
+    ctx.fillStyle = '#6b6860';
+    ctx.font = '11px DM Sans,sans-serif';
+    ctx.fillText(centerLabel.label, cx, cy + 10);
+  }
+
+  // Legend
+  const legendEl = document.getElementById(legendId);
+  if (legendEl) {
+    legendEl.innerHTML = segments.map(s=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px">
+        <span style="display:flex;align-items:center;gap:7px">
+          <span style="width:10px;height:10px;border-radius:50%;background:${s.color};flex-shrink:0;display:inline-block"></span>
+          <span style="color:var(--text2)">${s.label}</span>
+        </span>
+        <span style="font-weight:600;color:var(--text)">${s.display||s.value}</span>
+      </div>`).join('');
+  }
+}
+
 function renderDashboard() {
   const total = db.students.length;
   const active = db.students.filter(s=>s.status==='active').length;
   const overdue = db.students.filter(s=>s.payStatus==='overdue').length;
   const tf = db.students.reduce((a,s)=>a+(s.total||0),0);
   const tp = db.students.reduce((a,s)=>a+(s.paid||0),0);
+  const collRate = Math.round(tp/(tf||1)*100);
 
+  // ── Metric cards ──
   document.getElementById('dash-metrics').innerHTML = `
     <div class="metric-card"><div class="metric-label">Total students</div><div class="metric-value">${total}</div><div class="metric-sub">${active} active</div></div>
-    <div class="metric-card green"><div class="metric-label">Collected</div><div class="metric-value">${fmtMoney(tp)}</div><div class="metric-sub">${Math.round(tp/(tf||1)*100)}% of total</div></div>
+    <div class="metric-card green"><div class="metric-label">Collected</div><div class="metric-value">${fmtMoney(tp)}</div><div class="metric-sub">${collRate}% collection rate</div></div>
     <div class="metric-card warn"><div class="metric-label">Outstanding</div><div class="metric-value">${fmtMoney(tf-tp)}</div><div class="metric-sub">Pending collection</div></div>
     <div class="metric-card red"><div class="metric-label">Overdue</div><div class="metric-value">${overdue}</div><div class="metric-sub">students</div></div>
   `;
 
+  // ── Chart 1: Payment Collection Donut ──
   const counts = {paid:0,partial:0,unpaid:0,overdue:0};
   db.students.forEach(s=>{ if(counts[s.payStatus]!==undefined) counts[s.payStatus]++; });
-  const t = total||1;
-  document.getElementById('dash-pay-chart').innerHTML = ['paid','partial','unpaid','overdue'].map(k=>{
-    const pct=Math.round(counts[k]/t*100);
-    const cls={paid:'var(--accent)',partial:'var(--warn)',unpaid:'#888',overdue:'var(--danger)'}[k];
-    const lbl={paid:'Paid',partial:'Partial',unpaid:'Unpaid',overdue:'Overdue'}[k];
-    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-      <span style="font-size:12px;color:var(--text2);width:56px">${lbl}</span>
-      <div style="flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden"><div style="height:100%;background:${cls};border-radius:4px;width:${pct}%"></div></div>
-      <span style="font-size:12px;font-weight:600;width:20px">${counts[k]}</span>
-    </div>`;
-  }).join('');
+  drawDonut('chart-payment','legend-payment',[
+    {label:'Paid',       value:counts.paid,    color:'#1B2A6B', display:counts.paid+' students'},
+    {label:'Partial',    value:counts.partial,  color:'#F7931E', display:counts.partial+' students'},
+    {label:'Unpaid',     value:counts.unpaid,   color:'#9CA3AF', display:counts.unpaid+' students'},
+    {label:'Overdue',    value:counts.overdue,  color:'#E24B4A', display:counts.overdue+' students'},
+  ], {value: collRate+'%', label:'collected'});
 
-  const todayStr = today();
-  ensureAttendance(todayStr);
-  const att = db.attendance[todayStr]||{};
-  let pres=0,abs=0,late=0;
-  db.students.forEach(s=>{ const r=att[s.id]; if(r){ if(r.status==='present')pres++; else if(r.status==='absent')abs++; else if(r.status==='late')late++; }});
-  document.getElementById('dash-att-chart').innerHTML = [
-    {label:'Present',count:pres,color:'var(--accent)'},
-    {label:'Absent',count:abs,color:'var(--danger)'},
-    {label:'Late',count:late,color:'var(--warn)'},
-  ].map(x=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-    <span style="font-size:12px;color:var(--text2);width:56px">${x.label}</span>
-    <div style="flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden"><div style="height:100%;background:${x.color};border-radius:4px;width:${Math.round(x.count/total*100)}%"></div></div>
-    <span style="font-size:12px;font-weight:600;width:20px">${x.count}</span>
-  </div>`).join('');
+  // ── Chart 2: Enrollment by Grade Donut ──
+  const ORDER = ['PN','N','K1','K2','G1','G2','G3','G4','G5','G6','G7','G8','G9','G10','G11','G12'];
+  const PALETTE = [
+    '#1B2A6B','#F7931E','#2CA5E0','#1D9E75','#E24B4A','#9B59B6',
+    '#E67E22','#27AE60','#2980B9','#C0392B','#8E44AD','#16A085',
+    '#D35400','#2C3E50','#7F8C8D','#F39C12'
+  ];
+  const byGrade = {};
+  db.students.filter(s=>s.status==='active').forEach(s=>{ byGrade[s.grade]=(byGrade[s.grade]||0)+1; });
+  const gradeSegs = ORDER.filter(g=>byGrade[g]).map((g,i)=>({
+    label: gradeLabel(g), value: byGrade[g],
+    color: PALETTE[i % PALETTE.length],
+    display: byGrade[g]+' students'
+  }));
+  drawDonut('chart-enrollment','legend-enrollment', gradeSegs,
+    {value: active, label:'enrolled'});
 
+  // ── Chart 3: Outstanding Balance by Grade Donut ──
+  const balByGrade = {};
+  db.students.forEach(s=>{
+    const b = Math.max(0,(s.total||0)-(s.paid||0));
+    if (b > 0) balByGrade[s.grade] = (balByGrade[s.grade]||0) + b;
+  });
+  const balSegs = ORDER.filter(g=>balByGrade[g]).map((g,i)=>({
+    label: gradeLabel(g), value: Math.round(balByGrade[g]),
+    color: PALETTE[i % PALETTE.length],
+    display: fmtMoney(balByGrade[g])
+  }));
+  drawDonut('chart-balance','legend-balance', balSegs,
+    {value: fmtMoney(tf-tp).replace('$','$'), label:'outstanding'});
+
+  // ── Recent students ──
   const recent = [...db.students].slice(-5).reverse();
   document.getElementById('dash-recent').innerHTML = recent.length?recent.map(s=>`
     <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
@@ -1035,7 +1179,7 @@ function openStudentModal(id) {
   const s=id?db.students.find(x=>x.id===id):null;
   document.getElementById('smodal-title').textContent=s?'Edit student':'Add student';
   document.getElementById('smodal-save').textContent=s?'Save changes':'Add student';
-  const flds={first:'',last:'',dob:'',gender:'',address:'',sid:'',status:'active',grade:'K',class:'',enroll:'',teacher:'',parent:'',rel:'',phone:'',email:'',emerName:'',emerPhone:'',emerRel:'',medical:'',feeType:'tuition',total:'',paid:'',payStatus:'unpaid',due:'',payDate:'',payNotes:'',docNotes:''};
+  const flds={first:'',last:'',dob:'',gender:'',address:'',sid:'',status:'active',grade:'K1',class:'',enroll:'',teacher:'',parent:'',rel:'',phone:'',email:'',emerName:'',emerPhone:'',emerRel:'',medical:'',feeType:'tuition',total:'',paid:'',payStatus:'unpaid',due:'',payDate:'',payNotes:'',docNotes:''};
   if(s) Object.keys(flds).forEach(k=>flds[k]=s[k]!==undefined?s[k]:'');
   Object.entries({first:'sf-first',last:'sf-last',dob:'sf-dob',gender:'sf-gender',address:'sf-address',sid:'sf-id',status:'sf-status',grade:'sf-grade',class:'sf-class',enroll:'sf-enroll',teacher:'sf-teacher',parent:'sf-parent',rel:'sf-rel',phone:'sf-phone',email:'sf-email',emerName:'sf-emer-name',emerPhone:'sf-emer-phone',emerRel:'sf-emer-rel',medical:'sf-medical',feeType:'sf-fee-type',total:'sf-total',paid:'sf-paid',payStatus:'sf-pay-status',due:'sf-due',payDate:'sf-pay-date',payNotes:'sf-pay-notes',docNotes:'sf-doc-notes'}).forEach(([k,elId])=>{
     const el=document.getElementById(elId); if(el) el.value=flds[k];
@@ -1294,11 +1438,39 @@ function importExcel(input) {
       }
 
       function parseGrade(raw) {
-        if (!raw) return 'K';
-        const s = String(raw).trim().toUpperCase().replace(/\u200B/g,'').replace(/[^A-Z0-9]/g,'');
-        if (!s || s==='K'||s==='KG'||s==='KINDERGARTEN'||s==='PP') return 'K';
-        const m = s.match(/(\d+)/);
-        return m ? m[1] : 'K';
+        if (!raw) return 'PN';
+        const s = String(raw).trim().toUpperCase().replace(/​/g,'').replace(/​/g,'').trim();
+        const map = {
+          'PN':'PN','PRE-NURSERY':'PN','PRENURSERY':'PN',
+          'N':'N','NURSERY':'N',
+          'K1':'K1','KINDERGARTEN1':'K1','KINDERGARTEN 1':'K1','KG1':'K1',
+          'K2':'K2','KINDERGARTEN2':'K2','KINDERGARTEN 2':'K2','KG2':'K2',
+          'K':'K1','KG':'K1','KINDERGARTEN':'K1',
+          'G1':'G1','GRADE1':'G1','GRADE 1':'G1','1':'G1',
+          'G2':'G2','GRADE2':'G2','GRADE 2':'G2','2':'G2',
+          'G3':'G3','GRADE3':'G3','GRADE 3':'G3','3':'G3',
+          'G4':'G4','GRADE4':'G4','GRADE 4':'G4','4':'G4',
+          'G5':'G5','GRADE5':'G5','GRADE 5':'G5','5':'G5',
+          'G6':'G6','GRADE6':'G6','GRADE 6':'G6','6':'G6',
+          'G7':'G7','GRADE7':'G7','GRADE 7':'G7','7':'G7',
+          'G8':'G8','GRADE8':'G8','GRADE 8':'G8','8':'G8',
+          'G9':'G9','GRADE9':'G9','GRADE 9':'G9','9':'G9',
+          'G10':'G10','GRADE10':'G10','GRADE 10':'G10','10':'G10',
+          'G11':'G11','GRADE11':'G11','GRADE 11':'G11','11':'G11',
+          'G12':'G12','GRADE12':'G12','GRADE 12':'G12','12':'G12',
+        };
+        // Try exact match first
+        if (map[s]) return map[s];
+        // Try stripping spaces
+        const ns = s.replace(/\s+/g,'');
+        if (map[ns]) return map[ns];
+        // Fallback: try to find G+number pattern
+        const m = s.match(/G?(\d+)/);
+        if (m) {
+          const n = parseInt(m[1]);
+          if (n >= 1 && n <= 12) return 'G'+n;
+        }
+        return 'PN';
       }
 
       let imported = 0, skipped = 0;
@@ -1396,8 +1568,107 @@ function importExcel(input) {
 }
 
 // ── Init ───────────────────────────────────────────────────────────────────
+// ── Backup & Restore ───────────────────────────────────────────────────────
+function backupData() {
+  const backup = {
+    version: '1.0',
+    timestamp: new Date().toISOString(),
+    school: 'TG International School',
+    data: db,
+  };
+  const json = JSON.stringify(backup, null, 2);
+  const blob = new Blob([json], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateStr = new Date().toISOString().split('T')[0];
+  a.href = url;
+  a.download = `TGSchoolHub_backup_${dateStr}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  // Log backup
+  if (!db.backupHistory) db.backupHistory = [];
+  db.backupHistory.push({date: new Date().toISOString(), students: db.students.length});
+  if (db.backupHistory.length > 10) db.backupHistory = db.backupHistory.slice(-10);
+  db.lastBackup = new Date().toISOString();
+  saveDB();
+  renderBackupStatus();
+  alert('✅ Backup downloaded successfully!\n\nFile: TGSchoolHub_backup_' + dateStr + '.json\n\nStore this file somewhere safe (Google Drive, email, USB).');
+}
+
+function restoreData(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (!confirm('⚠️ This will REPLACE all current data with the backup file.\n\nMake sure you have a current backup before proceeding.\n\nContinue?')) {
+    input.value = ''; return;
+  }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const backup = JSON.parse(e.target.result);
+      // Validate it is a TG SchoolHub backup
+      if (!backup.data || !backup.data.students) {
+        alert('❌ Invalid backup file. Please use a file downloaded from TG SchoolHub.');
+        input.value = ''; return;
+      }
+      db = backup.data;
+      // Ensure required fields exist
+      if (!db.attendance) db.attendance = {};
+      if (!db.promotionHistory) db.promotionHistory = {};
+      if (!db.backupHistory) db.backupHistory = [];
+      db.lastBackup = new Date().toISOString();
+      saveDB();
+      input.value = '';
+      renderDashboard();
+      renderBackupStatus();
+      alert('✅ Data restored successfully!\n\n' + db.students.length + ' students loaded from backup file: ' + file.name);
+    } catch(err) {
+      alert('❌ Failed to read backup file: ' + err.message);
+      input.value = '';
+    }
+  };
+  reader.readAsText(file);
+}
+
+function renderBackupStatus() {
+  const el = document.getElementById('backup-status');
+  if (!el) return;
+  const lastBackup = db.lastBackup ? new Date(db.lastBackup) : null;
+  const history = db.backupHistory || [];
+  const daysSince = lastBackup ? Math.floor((new Date() - lastBackup) / (1000*60*60*24)) : null;
+  const statusColor = daysSince === null ? 'var(--danger)' : daysSince <= 7 ? 'var(--accent)' : daysSince <= 30 ? 'var(--warn)' : 'var(--danger)';
+  const statusMsg = daysSince === null ? '❌ No backup on record — back up now!' : daysSince === 0 ? '✅ Backed up today' : daysSince <= 7 ? `✅ Last backup ${daysSince} day${daysSince>1?'s':''} ago` : `⚠️ Last backup ${daysSince} days ago — please back up soon`;
+
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px 14px;background:var(--surface2);border-radius:8px">
+      <span style="font-size:13px;color:${statusColor};font-weight:500">${statusMsg}</span>
+    </div>
+    <div style="font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Backup history (last 10)</div>
+    ${history.length ? [...history].reverse().map(h=>`
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
+        <span style="color:var(--text2)">${new Date(h.date).toLocaleString()}</span>
+        <span style="color:var(--accent);font-weight:500">${h.students} students</span>
+      </div>`).join('') : '<p style="font-size:12px;color:var(--text3)">No backup history yet.</p>'}
+    <div style="margin-top:14px;padding:10px 14px;background:#fef9ee;border-radius:8px;border:1px solid #f6e0a0">
+      <p style="font-size:12px;color:var(--warn);font-weight:500;margin-bottom:4px">💡 Best practice</p>
+      <p style="font-size:12px;color:var(--text2);line-height:1.6">Back up weekly and save the file to <strong>Google Drive</strong> or email it to yourself. Always back up before importing new data or running grade promotion.</p>
+    </div>
+  `;
+}
+
+// ── Clear Filters ─────────────────────────────────────────────────────────
+function clearStudentFilters() {
+  document.getElementById('student-search').value = '';
+  document.getElementById('student-filter-grade').value = '';
+  document.getElementById('student-filter-pay').value = '';
+  document.getElementById('student-filter-shift').value = '';
+  document.getElementById('student-filter-mode').value = '';
+  document.getElementById('student-filter-status').value = '';
+  renderStudentTable();
+}
+
 // ── Grade Promotion ────────────────────────────────────────────────────────
-const GRADE_ORDER = ['K','1','2','3','4','5','6','7','8','9','10','11','12'];
+const GRADE_ORDER = ['PN','N','K1','K2','G1','G2','G3','G4','G5','G6','G7','G8','G9','G10','G11','G12'];
 
 function nextGrade(g) {
   const idx = GRADE_ORDER.indexOf(String(g).trim());
@@ -1433,7 +1704,7 @@ function runPromotion(isAuto) {
       s.grade = ng;
       promoted++;
     } else {
-      s.status = 'inactive'; // Graduate
+      s.status = 'inactive'; // Graduated from G12
       graduated++;
     }
     // Reset payment status for new year
@@ -1444,6 +1715,7 @@ function runPromotion(isAuto) {
 
   // Record promotion in history
   if (!db.promotionHistory) db.promotionHistory = [];
+  setTimeout(renderBackupStatus, 50);
   db.promotionHistory.push({
     date: new Date().toISOString().split('T')[0],
     promoted,
@@ -1487,6 +1759,7 @@ function renderAdmin() {
       : `<span style="color:var(--text2)">⏳ Next auto-promotion: <strong>1 August ${thisYear}</strong> — ${daysUntil} days away.</span>`;
 
   if (!db.promotionHistory) db.promotionHistory = [];
+  setTimeout(renderBackupStatus, 50);
   document.getElementById('promo-history').innerHTML = db.promotionHistory.length
     ? [...db.promotionHistory].reverse().map(h => `
         <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
