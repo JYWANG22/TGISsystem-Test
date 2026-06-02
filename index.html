@@ -870,10 +870,27 @@ function renderDashboard() {
   const collRate = Math.round(tp/(tf||1)*100);
 
   // ── Metric cards ──
+  const blurred = window._amountsBlurred || false;
+  const blurStyle = blurred ? 'filter:blur(6px);user-select:none' : '';
+  const eyeIcon = blurred
+    ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`
+    : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+
   document.getElementById('dash-metrics').innerHTML = `
     <div class="metric-card"><div class="metric-label">Total students</div><div class="metric-value">${total}</div><div class="metric-sub">${active} active</div></div>
-    <div class="metric-card green"><div class="metric-label">Collected</div><div class="metric-value">${fmtMoney(tp)}</div><div class="metric-sub">${collRate}% collection rate</div></div>
-    <div class="metric-card warn"><div class="metric-label">Outstanding</div><div class="metric-value">${fmtMoney(tf-tp)}</div><div class="metric-sub">Pending collection</div></div>
+    <div class="metric-card green">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="metric-label">Collected</div>
+        <button onclick="toggleBlur()" style="background:none;border:none;cursor:pointer;color:var(--text3);padding:2px" title="${blurred?'Show amounts':'Hide amounts'}">${eyeIcon}</button>
+      </div>
+      <div class="metric-value" style="${blurStyle}">${fmtMoney(tp)}</div>
+      <div class="metric-sub">${collRate}% collection rate</div>
+    </div>
+    <div class="metric-card warn">
+      <div class="metric-label">Outstanding</div>
+      <div class="metric-value" style="${blurStyle}">${fmtMoney(tf-tp)}</div>
+      <div class="metric-sub">Pending collection</div>
+    </div>
     <div class="metric-card red"><div class="metric-label">Overdue</div><div class="metric-value">${overdue}</div><div class="metric-sub">students</div></div>
   `;
 
@@ -894,13 +911,25 @@ function renderDashboard() {
     '#E67E22','#27AE60','#2980B9','#C0392B','#8E44AD','#16A085',
     '#D35400','#2C3E50','#7F8C8D','#F39C12'
   ];
+  // Normalize grade key - strip zero-width spaces and whitespace
+  function normGrade(g) { return String(g||'').replace(/[\u200B\u200C\u200D\uFEFF\s]/g,'').toUpperCase(); }
+
   const byGrade = {};
-  db.students.filter(s=>s.status==='active').forEach(s=>{ byGrade[s.grade]=(byGrade[s.grade]||0)+1; });
+  db.students.filter(s=>s.status==='active').forEach(s=>{
+    const g = normGrade(s.grade);
+    // Map to standard key
+    const std = ORDER.find(o=>normGrade(o)===g) || g;
+    byGrade[std]=(byGrade[std]||0)+1;
+  });
   const gradeSegs = ORDER.filter(g=>byGrade[g]).map((g,i)=>({
     label: gradeLabel(g), value: byGrade[g],
     color: PALETTE[i % PALETTE.length],
     display: byGrade[g]+' students'
   }));
+  // Also add any non-standard grades
+  Object.keys(byGrade).filter(g=>!ORDER.includes(g)).forEach((g,i)=>{
+    gradeSegs.push({label:g, value:byGrade[g], color:PALETTE[(ORDER.length+i)%PALETTE.length], display:byGrade[g]+' students'});
+  });
   drawDonut('chart-enrollment','legend-enrollment', gradeSegs,
     {value: active, label:'enrolled'});
 
@@ -908,15 +937,22 @@ function renderDashboard() {
   const balByGrade = {};
   db.students.forEach(s=>{
     const b = Math.max(0,(s.total||0)-(s.paid||0));
-    if (b > 0) balByGrade[s.grade] = (balByGrade[s.grade]||0) + b;
+    if (b > 0) {
+      const g = normGrade(s.grade);
+      const std = ORDER.find(o=>normGrade(o)===g) || g;
+      balByGrade[std] = (balByGrade[std]||0) + b;
+    }
   });
   const balSegs = ORDER.filter(g=>balByGrade[g]).map((g,i)=>({
     label: gradeLabel(g), value: Math.round(balByGrade[g]),
     color: PALETTE[i % PALETTE.length],
     display: fmtMoney(balByGrade[g])
   }));
+  Object.keys(balByGrade).filter(g=>!ORDER.includes(g)).forEach((g,i)=>{
+    balSegs.push({label:g, value:Math.round(balByGrade[g]), color:PALETTE[(ORDER.length+i)%PALETTE.length], display:fmtMoney(balByGrade[g])});
+  });
   drawDonut('chart-balance','legend-balance', balSegs,
-    {value: fmtMoney(tf-tp).replace('$','$'), label:'outstanding'});
+    {value: fmtMoney(tf-tp), label:'outstanding'});
 
   // ── Recent students ──
   const recent = [...db.students].slice(-5).reverse();
@@ -1654,6 +1690,12 @@ function renderBackupStatus() {
       <p style="font-size:12px;color:var(--text2);line-height:1.6">Back up weekly and save the file to <strong>Google Drive</strong> or email it to yourself. Always back up before importing new data or running grade promotion.</p>
     </div>
   `;
+}
+
+// ── Blur Toggle ────────────────────────────────────────────────────────────
+function toggleBlur() {
+  window._amountsBlurred = !window._amountsBlurred;
+  renderDashboard();
 }
 
 // ── Clear Filters ─────────────────────────────────────────────────────────
