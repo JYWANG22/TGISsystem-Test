@@ -368,7 +368,7 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--text2
         <table>
           <thead>
             <tr>
-              <th>Student</th><th>ID</th><th>Grade</th><th>Class</th><th>DOB</th><th>Status</th><th>Payment</th><th>Actions</th>
+              <th>Student</th><th>ID</th><th>Level</th><th>Class</th><th>DOB</th><th>Status</th><th>Payment</th><th>Actions</th>
             </tr>
           </thead>
           <tbody id="student-tbody"></tbody>
@@ -395,7 +395,7 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--text2
         </div>
         <table>
           <thead>
-            <tr><th>Student</th><th>Grade</th><th>Class</th><th>Status</th><th>Note</th></tr>
+            <tr><th>Student</th><th>Level</th><th>Class</th><th>Status</th><th>Note</th></tr>
           </thead>
           <tbody id="att-tbody"></tbody>
         </table>
@@ -436,7 +436,7 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--text2
         </div>
         <table>
           <thead>
-            <tr><th>Student</th><th>Grade</th><th>Fee type</th><th>Total fee</th><th>Paid</th><th>Balance</th><th>Status</th><th>Due date</th><th>Actions</th></tr>
+            <tr><th>Student</th><th>Level</th><th>Fee type</th><th>Total fee</th><th>Paid</th><th>Balance</th><th>Status</th><th>Due date</th><th>Actions</th></tr>
           </thead>
           <tbody id="pay-tbody"></tbody>
         </table>
@@ -456,7 +456,7 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--text2
         </div>
       </div>
       <div class="card" style="margin-bottom:18px">
-        <div style="font-size:13px;font-weight:600;margin-bottom:16px">Collection rate by grade</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:16px">Collection rate by level</div>
         <div id="rep-grade"></div>
       </div>
       <div class="card">
@@ -520,7 +520,7 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--text2
         </div>
         <table>
           <thead>
-            <tr><th>Ref</th><th>Student</th><th>Grade</th><th>Parent</th><th>Type</th><th>Submitted</th><th>Status</th><th>Action</th></tr>
+            <tr><th>Ref</th><th>Student</th><th>Level</th><th>Parent</th><th>Type</th><th>Submitted</th><th>Status</th><th>Action</th></tr>
           </thead>
           <tbody id="appeals-tbody"></tbody>
         </table>
@@ -562,7 +562,7 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--text2
         </div>
         <table>
           <thead>
-            <tr><th>Ref</th><th>Student</th><th>Grade</th><th>Parent</th><th>Category</th><th>Incident date</th><th>Status</th><th>Action</th></tr>
+            <tr><th>Ref</th><th>Student</th><th>Level</th><th>Parent</th><th>Category</th><th>Incident date</th><th>Status</th><th>Action</th></tr>
           </thead>
           <tbody id="complaints-tbody"></tbody>
         </table>
@@ -921,6 +921,8 @@ function pastDate(n) { const d=new Date(); d.setDate(d.getDate()-n); return d.to
 function futureDate(n) { const d=new Date(); d.setDate(d.getDate()+n); return d.toISOString().split('T')[0]; }
 function nextId() { return db.students.length ? Math.max(...db.students.map(s=>s.id||0))+1 : 1001; }
 function gradeLabel(g) {
+  if (!g) return '—';
+  const normalized = normGrade(String(g));
   const labels = {
     'PN':'Pre-Nursery','N':'Nursery',
     'K1':'Kindergarten 1','K2':'Kindergarten 2',
@@ -928,7 +930,7 @@ function gradeLabel(g) {
     'G5':'Grade 5','G6':'Grade 6','G7':'Grade 7','G8':'Grade 8',
     'G9':'Grade 9','G10':'Grade 10','G11':'Grade 11','G12':'Grade 12'
   };
-  return labels[String(g).trim()] || g || '—';
+  return labels[normalized] || normalized || g || '—';
 }
 
 function seedStudents() {
@@ -1005,10 +1007,10 @@ function populateGradeFilter(id) {
   if (!el) return;
   const cur = el.value;
   const ORDER = ['PN','N','K1','K2','G1','G2','G3','G4','G5','G6','G7','G8','G9','G10','G11','G12'];
-  const present = new Set(db.students.map(s=>s.grade));
+  const present = new Set(db.students.map(s=>normGrade(s.grade)));
   const grades = ORDER.filter(g => present.has(g));
-  // Also include any grades not in standard order
-  db.students.forEach(s=>{ if(!ORDER.includes(s.grade) && s.grade) grades.push(s.grade); });
+  // Also include any non-standard grades
+  db.students.forEach(s=>{ const ng=normGrade(s.grade); if(!ORDER.includes(ng) && ng) grades.push(ng); });
   el.innerHTML = '<option value="">All grades</option>';
   [...new Set(grades)].forEach(g=>{const o=document.createElement('option');o.value=g;o.textContent=gradeLabel(g);if(g===cur)o.selected=true;el.appendChild(o);});
 }
@@ -1131,13 +1133,36 @@ function renderDashboard() {
     '#D35400','#2C3E50','#7F8C8D','#F39C12'
   ];
   // Normalize grade key - strip zero-width spaces and whitespace
-  function normGrade(g) { return String(g||'').replace(/[\u200B\u200C\u200D\uFEFF\s]/g,'').toUpperCase(); }
+  function normGrade(g) {
+  if (!g) return '';
+  let s = String(g).replace(/[​‌‍﻿]/g,'').trim().toUpperCase();
+  // Map common formats to standard
+  const map = {
+    'PN':'PN','PRE-NURSERY':'PN','PRENURSERY':'PN',
+    'N':'N','NURSERY':'N',
+    'K1':'K1','KG1':'K1','KINDER1':'K1','KINDERGARTEN1':'K1',
+    'K2':'K2','KG2':'K2','KINDER2':'K2','KINDERGARTEN2':'K2',
+    'G1':'G1','GRADE1':'G1','1':'G1',
+    'G2':'G2','GRADE2':'G2','2':'G2',
+    'G3':'G3','GRADE3':'G3','3':'G3',
+    'G4':'G4','GRADE4':'G4','4':'G4',
+    'G5':'G5','GRADE5':'G5','5':'G5',
+    'G6':'G6','GRADE6':'G6','6':'G6',
+    'G7':'G7','GRADE7':'G7','7':'G7',
+    'G8':'G8','GRADE8':'G8','8':'G8',
+    'G9':'G9','GRADE9':'G9','9':'G9',
+    'G10':'G10','GRADE10':'G10','10':'G10',
+    'G11':'G11','GRADE11':'G11','11':'G11',
+    'G12':'G12','GRADE12':'G12','12':'G12',
+  };
+  // Strip spaces for lookup
+  const ns = s.replace(/\s+/g,'');
+  return map[ns] || map[s] || s;
+}
 
   const byGrade = {};
   db.students.filter(s=>s.status==='active').forEach(s=>{
-    const g = normGrade(s.grade);
-    // Map to standard key
-    const std = ORDER.find(o=>normGrade(o)===g) || g;
+    const std = normGrade(s.grade);
     byGrade[std]=(byGrade[std]||0)+1;
   });
   const gradeSegs = ORDER.filter(g=>byGrade[g]).map((g,i)=>({
@@ -1157,8 +1182,7 @@ function renderDashboard() {
   db.students.forEach(s=>{
     const b = Math.max(0,(s.total||0)-(s.paid||0));
     if (b > 0) {
-      const g = normGrade(s.grade);
-      const std = ORDER.find(o=>normGrade(o)===g) || g;
+      const std = normGrade(s.grade);
       balByGrade[std] = (balByGrade[std]||0) + b;
     }
   });
@@ -1207,7 +1231,7 @@ function renderStudentTable() {
     <tr>
       <td><div class="cell-name"><div class="avatar" style="background:${avatarColor(s.first+s.last)};color:#fff">${initials(s.first,s.last)}</div><div><p style="font-weight:500">${[s.first,s.last].filter(Boolean).join(' ')}</p><p style="font-size:11px;color:var(--text3)">${s.email||s.phone||''}</p></div></div></td>
       <td style="font-family:'DM Mono',monospace;font-size:12px">${s.sid||'—'}</td>
-      <td>${gradeLabel(s.grade)}</td>
+      <td>${gradeLabel(s.grade)||s.grade}</td>
       <td>${s.class||'—'}</td>
       <td style="font-size:12px;color:var(--text2)">${s.dob||'—'}</td>
       <td>${statusBadge(s.status)}</td>
@@ -1251,7 +1275,7 @@ function renderAttendance() {
     const r = att[s.id]||{status:'present',note:''};
     return `<tr>
       <td><div class="cell-name"><div class="avatar" style="background:${avatarColor(s.first+s.last)};color:#fff;width:32px;height:32px;font-size:12px">${initials(s.first,s.last)}</div>${[s.first,s.last].filter(Boolean).join(' ')}</div></td>
-      <td>${gradeLabel(s.grade)}</td>
+      <td>${gradeLabel(s.grade)||s.grade}</td>
       <td>${s.class||'—'}</td>
       <td>
         <select onchange="setAtt('${dateStr}',${s.id},'status',this.value)" style="width:auto;padding:5px 10px;font-size:12px">
@@ -1816,7 +1840,7 @@ function importExcel(input) {
         const last  = nameParts.length > 1 ? nameParts[nameParts.length-1] : '';
 
         const gradeRaw   = getCell(row, COL.grade) || getCell(row, COL.gradePrev);
-        const grade      = parseGrade(gradeRaw);
+        const grade      = parseGrade(gradeRaw); // stored as PN/N/K1/K2/G1..G12
         const yearlyFee  = parseMoney(getCell(row, COL.yearlyFee));
         const netFee     = parseMoney(getCell(row, COL.netFee));
         const netCollect = parseMoney(getCell(row, COL.netCollect));
@@ -2694,7 +2718,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <div style="font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Preview (first 10)</div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Student</th><th>ID</th><th>Grade</th><th>Phone</th><th>Payment</th></tr></thead>
+          <thead><tr><th>Student</th><th>ID</th><th>Level</th><th>Phone</th><th>Payment</th></tr></thead>
           <tbody id="import-preview-body"></tbody>
         </table>
       </div>
