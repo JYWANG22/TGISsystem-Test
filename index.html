@@ -221,7 +221,7 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--text2
 <body>
 
 <!-- Login Screen -->
-<div class="login-screen" id="login-screen">
+<div class="login-screen" id="login-screen" style="display:none">
   <div class="login-box">
     <div class="login-error" id="login-error"></div>
     <div class="login-title">TG SchoolHub</div>
@@ -240,7 +240,7 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--text2
   <div class="login-footer">TG International School · Member of Crestar Education Group</div>
 </div>
 
-<div class="shell" id="main-shell" style="display:none">
+<div class="shell" id="main-shell" style="display:flex">
 <!-- Sidebar -->
 <nav class="sidebar" role="navigation" aria-label="Main navigation">
   <div class="sidebar-logo" style="padding:16px 16px 14px">
@@ -2104,7 +2104,7 @@ async function initMSAL() {
     if(btn){ btn.disabled=false; btn.style.opacity='1'; btn.style.cursor='pointer'; }
     if(loadEl) loadEl.style.display='none';
   }
-  }); // end waitForMSAL
+  }); // end waitForMSAL - MSAL disabled
 }
 
 async function signIn() {
@@ -2695,7 +2695,24 @@ function renderAdmin() {
 document.addEventListener('DOMContentLoaded', function() {
   currentRole = 'admin';
   currentUser = {name:'Admin', username:'admin@tgis.edu.kh'};
-  showApp();
+  // Hide login screen, show app directly
+  const loginScreen = document.getElementById('login-screen');
+  const mainShell   = document.getElementById('main-shell');
+  if (loginScreen) loginScreen.style.display = 'none';
+  if (mainShell)   mainShell.style.display   = 'flex';
+  // Show user info
+  const nameEl = document.getElementById('user-name-display');
+  const roleEl = document.getElementById('user-role-display');
+  const barEl  = document.getElementById('user-info-bar');
+  if (nameEl) nameEl.textContent = 'Admin';
+  if (roleEl) roleEl.textContent = 'ADMIN';
+  if (barEl)  barEl.style.display = 'flex';
+  applyRolePermissions();
+  loadDB();
+  checkAutoPromotion();
+  renderDashboard();
+  updateAppealsBadge();
+  updateComplaintsBadge();
 });
 </script>
 
