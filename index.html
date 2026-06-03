@@ -2692,9 +2692,11 @@ function renderAdmin() {
 
 // ── Init ────────────────────────────────────────────────────────────────────
 // MSAL login temporarily disabled — direct access
-currentRole = 'admin';
-currentUser = {name:'Admin', username:'admin@tgis.edu.kh'};
-showApp();
+document.addEventListener('DOMContentLoaded', function() {
+  currentRole = 'admin';
+  currentUser = {name:'Admin', username:'admin@tgis.edu.kh'};
+  showApp();
+});
 </script>
 
 <!-- Import Result Modal -->
