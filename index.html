@@ -165,7 +165,7 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--text2
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<!-- MSAL login disabled temporarily -->
+<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js" crossorigin="anonymous"></script>
 <style>
 /* Login screen */
 .login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#1B2A6B 0%,#111c4e 60%,#0d1535 100%);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column}
@@ -196,7 +196,7 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--text2
 <body>
 
 <!-- Login Screen -->
-<div class="login-screen" id="login-screen" style="display:none">
+<div class="login-screen" id="login-screen">
   <div class="login-box">
     <div class="login-error" id="login-error"></div>
     <div class="login-title">TG SchoolHub</div>
@@ -215,7 +215,7 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--text2
   <div class="login-footer">TG International School · Member of Crestar Education Group</div>
 </div>
 
-<div class="shell" id="main-shell" style="display:flex">
+<div class="shell" id="main-shell" style="display:none">
 <!-- Sidebar -->
 <nav class="sidebar" role="navigation" aria-label="Main navigation">
   <div class="sidebar-logo" style="padding:16px 16px 14px">
@@ -961,10 +961,16 @@ function ensureAttendance(dateStr) {
 
 // ── Navigation ─────────────────────────────────────────────────────────────
 function showView(v) {
+  // Permission check
+  if (currentRole && !canAccess(v)) {
+    const allowed = ROLE_PERMISSIONS[currentRole]||[];
+    const first = allowed[0]||'dashboard';
+    v = first; // redirect to first allowed view
+  }
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
   document.getElementById('view-'+v).classList.add('active');
-  document.getElementById('nav-'+v).classList.add('active');
+  document.getElementById('nav-'+v) && document.getElementById('nav-'+v).classList.add('active');
   const titles = {dashboard:'Dashboard',students:'All students',attendance:'Attendance',payments:'Payments',reports:'Reports',appeals:'Fee Appeals',complaints:'Complaints',admin:'Admin Tools'};
   document.getElementById('topbar-title').textContent = titles[v]||v;
   if(v==='dashboard') renderDashboard();
@@ -2012,7 +2018,7 @@ function renderBackupStatus() {
 // ── Microsoft Authentication ───────────────────────────────────────────────
 const msalConfig = {
   auth: {
-    clientId: "7ce4eb72-2bee-4298-8305-04c38de64a52",
+    clientId: "a04c19a7-16cb-42e3-aa05-af92c4caf0be",
     authority: "https://login.microsoftonline.com/add6b2b0-2cc6-4662-aff9-b9769e296ad3",
     redirectUri: window.location.origin + window.location.pathname,
   },
@@ -2219,7 +2225,7 @@ function canAccess(view) {
   return allowed.includes(view);
 }
 
-// showView permission override removed — re-enable with login
+// Permission check handled inside showView below
 
 // ── Staff Role Management ──────────────────────────────────────────────────
 function addStaffRole() {
@@ -2676,28 +2682,9 @@ function renderAdmin() {
 }
 
 // ── Init ────────────────────────────────────────────────────────────────────
-// MSAL login temporarily disabled — direct access
+// MSAL login enabled
 document.addEventListener('DOMContentLoaded', function() {
-  currentRole = 'admin';
-  currentUser = {name:'Admin', username:'admin@tgis.edu.kh'};
-  // Hide login screen, show app directly
-  const loginScreen = document.getElementById('login-screen');
-  const mainShell   = document.getElementById('main-shell');
-  if (loginScreen) loginScreen.style.display = 'none';
-  if (mainShell)   mainShell.style.display   = 'flex';
-  // Show user info
-  const nameEl = document.getElementById('user-name-display');
-  const roleEl = document.getElementById('user-role-display');
-  const barEl  = document.getElementById('user-info-bar');
-  if (nameEl) nameEl.textContent = 'Admin';
-  if (roleEl) roleEl.textContent = 'ADMIN';
-  if (barEl)  barEl.style.display = 'flex';
-  applyRolePermissions();
-  loadDB();
-  checkAutoPromotion();
-  renderDashboard();
-  updateAppealsBadge();
-  updateComplaintsBadge();
+  initMSAL();
 });
 </script>
 
