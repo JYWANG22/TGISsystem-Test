@@ -2195,21 +2195,7 @@ function canAccess(view) {
   return allowed.includes(view);
 }
 
-// Override showView to enforce permissions
-const _origShowView = showView;
-function showView(v) {
-  if (currentRole && !canAccess(v)) {
-    document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
-    document.getElementById('view-'+v) && (document.getElementById('view-'+v).innerHTML = `
-      <div class="access-denied">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-        <h3>Access restricted</h3>
-        <p>Your role (${(currentRole||'').replace('_',' ')}) does not have permission to view this section.</p>
-      </div>`);
-    return;
-  }
-  _origShowView(v);
-}
+// showView permission override removed — re-enable with login
 
 // ── Staff Role Management ──────────────────────────────────────────────────
 function addStaffRole() {
