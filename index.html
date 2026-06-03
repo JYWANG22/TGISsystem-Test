@@ -165,10 +165,57 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--text2
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+<style>
+/* Login screen */
+.login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#1B2A6B 0%,#111c4e 60%,#0d1535 100%);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column}
+.login-box{background:#fff;border-radius:20px;padding:40px 44px;width:min(420px,90vw);box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center}
+.login-logo{width:110px;margin:0 auto 20px}
+.login-title{font-size:22px;font-weight:700;color:#1B2A6B;margin-bottom:6px}
+.login-sub{font-size:13px;color:#6b6860;margin-bottom:28px;line-height:1.5}
+.ms-btn{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:13px 20px;border:1.5px solid #e2e0d8;border-radius:10px;background:#fff;cursor:pointer;font-size:14px;font-weight:500;color:#1a1917;transition:background .15s,border-color .15s;font-family:inherit}
+.ms-btn:hover{background:#f7f6f3;border-color:#1B2A6B}
+.ms-btn svg{flex-shrink:0}
+.login-footer{font-size:11px;color:rgba(255,255,255,.4);margin-top:24px}
+.login-error{background:#fdf0ee;border:1px solid #f5c6c6;border-radius:8px;padding:10px 14px;font-size:12px;color:#c0392b;margin-bottom:16px;display:none}
+.login-loading{font-size:13px;color:#6b6860;margin-top:12px;display:none}
+
+/* Role badge in topbar */
+.role-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;background:rgba(247,147,30,.15);color:#F7931E;letter-spacing:.04em}
+.user-info{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text2)}
+.signout-btn{font-size:12px;color:var(--text3);cursor:pointer;background:none;border:1px solid var(--border2);border-radius:6px;padding:4px 10px;font-family:inherit}
+.signout-btn:hover{color:var(--danger);border-color:var(--danger)}
+
+/* Access denied */
+.access-denied{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;color:var(--text2)}
+.access-denied svg{margin-bottom:16px;color:var(--danger);opacity:.6}
+.access-denied h3{font-size:16px;font-weight:600;margin-bottom:8px;color:var(--text)}
+.access-denied p{font-size:13px;max-width:300px;line-height:1.6}
+</style>
 </head>
 <body>
 
-<div class="shell">
+<!-- Login Screen -->
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="login-error" id="login-error"></div>
+    <div class="login-title">TG SchoolHub</div>
+    <div class="login-sub">Student Management System<br>Sign in with your TG work account to continue</div>
+    <button class="ms-btn" onclick="signIn()" id="ms-login-btn">
+      <svg width="20" height="20" viewBox="0 0 21 21" fill="none">
+        <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
+        <rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
+        <rect x="1" y="11" width="9" height="9" fill="#00A4EF"/>
+        <rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
+      </svg>
+      Sign in with Microsoft
+    </button>
+    <div class="login-loading" id="login-loading">Signing you in…</div>
+  </div>
+  <div class="login-footer">TG International School · Member of Crestar Education Group</div>
+</div>
+
+<div class="shell" id="main-shell" style="display:none">
 <!-- Sidebar -->
 <nav class="sidebar" role="navigation" aria-label="Main navigation">
   <div class="sidebar-logo" style="padding:16px 16px 14px">
@@ -214,7 +261,12 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--text2
   <header class="topbar">
     <span class="topbar-title" id="topbar-title">Dashboard</span>
     <div class="topbar-actions">
-      <button class="btn btn-primary btn-sm" onclick="openStudentModal(null)">
+      <div class="user-info" id="user-info-bar" style="display:none">
+        <span id="user-name-display" style="font-size:12px"></span>
+        <span class="role-badge" id="user-role-display"></span>
+        <button class="signout-btn" onclick="signOut()">Sign out</button>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="openStudentModal(null)" id="btn-add-student">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Add student
       </button>
@@ -458,6 +510,23 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--text2
         <div id="promo-history" style="font-size:13px;color:var(--text2)">No promotions recorded yet.</div>
       </div>
 
+      <!-- STAFF ROLES -->
+      <div class="card" style="margin-bottom:18px">
+        <div style="font-size:15px;font-weight:600;margin-bottom:6px">Staff access &amp; roles</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6">Assign roles to staff by their Microsoft work email. Only <strong>Admin</strong> can manage roles.</p>
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+          <input type="email" id="role-email" placeholder="staff@tgis.edu.kh" style="flex:1;min-width:200px">
+          <select id="role-select" style="width:auto">
+            <option value="admin">Admin (full access)</option>
+            <option value="finance">Finance (payments only)</option>
+            <option value="principal">Principal (view all)</option>
+            <option value="student_service">Student Service</option>
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="addStaffRole()">Add / Update</button>
+        </div>
+        <div id="staff-role-list"></div>
+      </div>
+
       <!-- BACKUP & RESTORE -->
       <div class="card" style="margin-top:18px">
         <div style="font-size:15px;font-weight:600;margin-bottom:6px">Backup &amp; Restore</div>
@@ -496,6 +565,8 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--text2
   </div>
 </div>
 </div>
+
+</div><!-- end main-shell -->
 
 <!-- Student Add/Edit Modal -->
 <div class="overlay" id="student-modal">
@@ -577,17 +648,40 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--text2
         <div class="field"><label class="field-label">Allergies / conditions</label><textarea id="sf-medical" placeholder="List any allergies, medical conditions, medications…"></textarea></div>
       </div>
       <div class="form-section">
+        <div class="form-section-title">Discount scheme</div>
+        <div class="form-row">
+          <div class="field"><label class="field-label">Discount scheme</label>
+            <select id="sf-discount-scheme" onchange="applyDiscountScheme()">
+              <option value="">None</option>
+              <option value="Founding Family (ISS)">Founding Family (ISS)</option>
+              <option value="TGIS Fee">TGIS Fee</option>
+              <option value="Staff Scholarship">Staff Scholarship</option>
+            </select>
+          </div>
+          <div class="field"><label class="field-label">Discount % <span style="font-weight:400;color:var(--text3)">(enter manually)</span></label>
+            <input type="number" id="sf-discount-pct" placeholder="e.g. 10" min="0" max="100" step="0.1" oninput="applyDiscountScheme()">
+          </div>
+        </div>
+        <div id="sf-discount-preview" style="display:none;background:var(--accent-light);border-radius:8px;padding:10px 14px;margin-bottom:4px;font-size:12px;color:var(--accent-dark)"></div>
+      </div>
+      <div class="form-section">
         <div class="form-section-title">Payment details</div>
         <div class="form-row">
           <div class="field"><label class="field-label">Fee type</label>
             <select id="sf-fee-type"><option value="tuition">Tuition</option><option value="lunch">Lunch plan</option><option value="activity">Activity fee</option><option value="transport">Transport</option><option value="other">Other</option></select>
           </div>
-          <div class="field"><label class="field-label">Total fee ($)</label><input type="number" id="sf-total" placeholder="0.00" min="0" step="0.01"></div>
+          <div class="field"><label class="field-label">Original fee ($)</label><input type="number" id="sf-total-original" placeholder="0.00" min="0" step="0.01" oninput="applyDiscountScheme()"></div>
         </div>
         <div class="form-row">
+          <div class="field"><label class="field-label">Fee after discount ($)</label><input type="number" id="sf-total" placeholder="0.00" min="0" step="0.01" style="background:var(--surface2)"></div>
           <div class="field"><label class="field-label">Amount paid ($)</label><input type="number" id="sf-paid" placeholder="0.00" min="0" step="0.01" oninput="autoPayStatus()"></div>
+        </div>
+        <div class="form-row">
           <div class="field"><label class="field-label">Payment status</label>
             <select id="sf-pay-status"><option value="unpaid">Unpaid</option><option value="partial">Partial</option><option value="paid">Paid</option><option value="overdue">Overdue</option></select>
+          </div>
+          <div class="field"><label class="field-label">Payment mode</label>
+            <input type="text" id="sf-pay-mode" placeholder="e.g. Monthly, Termly, Yearly">
           </div>
         </div>
         <div class="form-row">
@@ -1143,6 +1237,42 @@ function renderReports() {
   let p=0,a=0,l=0,e=0;
   db.students.forEach(s=>{ const r=att[s.id]||{}; if(r.status==='present')p++; else if(r.status==='absent')a++; else if(r.status==='late')l++; else if(r.status==='excused')e++; });
   const tot=db.students.length||1;
+  // Discount scheme report
+  const schemes = ['Founding Family (ISS)','TGIS Fee','Staff Scholarship'];
+  const schemeData = {};
+  schemes.forEach(s=>{ schemeData[s]={count:0,totalDisc:0,students:[]}; });
+  db.students.forEach(s=>{
+    if(s.discountScheme && schemeData[s.discountScheme]) {
+      schemeData[s.discountScheme].count++;
+      schemeData[s.discountScheme].totalDisc += (s.discountAmt||0);
+      schemeData[s.discountScheme].students.push(s);
+    }
+  });
+  const totalDisc = Object.values(schemeData).reduce((a,d)=>a+d.totalDisc,0);
+  document.getElementById('rep-discount').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
+      ${schemes.map(s=>`
+        <div class="metric-card">
+          <div class="metric-label">${s}</div>
+          <div class="metric-value" style="font-size:16px">${schemeData[s].count} <span style="font-size:12px;font-weight:400;color:var(--text2)">students</span></div>
+          <div class="metric-sub" style="color:var(--danger)">-${fmtMoney(schemeData[s].totalDisc)} discount</div>
+        </div>`).join('')}
+    </div>
+    <div style="padding:10px 14px;background:var(--surface2);border-radius:8px;font-size:13px;display:flex;justify-content:space-between">
+      <span style="font-weight:500">Total discount given</span>
+      <span style="color:var(--danger);font-weight:600">-${fmtMoney(totalDisc)}</span>
+    </div>
+    ${schemes.map(s=>schemeData[s].count?`
+      <div style="margin-top:14px">
+        <p style="font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">${s} — students</p>
+        ${schemeData[s].students.map(st=>`
+          <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px">
+            <span>${[st.first,st.last].filter(Boolean).join(' ')} · ${gradeLabel(st.grade)}</span>
+            <span style="color:var(--danger)">${st.discountPct}% (-${fmtMoney(st.discountAmt)})</span>
+          </div>`).join('')}
+      </div>`:'').join('')}
+  `;
+
   document.getElementById('rep-att').innerHTML=`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
       <div class="metric-card green"><div class="metric-label">Present today</div><div class="metric-value" style="font-size:18px">${p}</div></div>
@@ -1217,9 +1347,16 @@ function openStudentModal(id) {
   document.getElementById('smodal-save').textContent=s?'Save changes':'Add student';
   const flds={first:'',last:'',dob:'',gender:'',address:'',sid:'',status:'active',grade:'K1',class:'',enroll:'',teacher:'',parent:'',rel:'',phone:'',email:'',emerName:'',emerPhone:'',emerRel:'',medical:'',feeType:'tuition',total:'',paid:'',payStatus:'unpaid',due:'',payDate:'',payNotes:'',docNotes:''};
   if(s) Object.keys(flds).forEach(k=>flds[k]=s[k]!==undefined?s[k]:'');
-  Object.entries({first:'sf-first',last:'sf-last',dob:'sf-dob',gender:'sf-gender',address:'sf-address',sid:'sf-id',status:'sf-status',grade:'sf-grade',class:'sf-class',enroll:'sf-enroll',teacher:'sf-teacher',parent:'sf-parent',rel:'sf-rel',phone:'sf-phone',email:'sf-email',emerName:'sf-emer-name',emerPhone:'sf-emer-phone',emerRel:'sf-emer-rel',medical:'sf-medical',feeType:'sf-fee-type',total:'sf-total',paid:'sf-paid',payStatus:'sf-pay-status',due:'sf-due',payDate:'sf-pay-date',payNotes:'sf-pay-notes',docNotes:'sf-doc-notes'}).forEach(([k,elId])=>{
+  Object.entries({first:'sf-first',last:'sf-last',dob:'sf-dob',gender:'sf-gender',address:'sf-address',sid:'sf-id',status:'sf-status',grade:'sf-grade',class:'sf-class',enroll:'sf-enroll',teacher:'sf-teacher',parent:'sf-parent',rel:'sf-rel',phone:'sf-phone',email:'sf-email',emerName:'sf-emer-name',emerPhone:'sf-emer-phone',emerRel:'sf-emer-rel',medical:'sf-medical',feeType:'sf-fee-type',total:'sf-total',paid:'sf-paid',payStatus:'sf-pay-status',due:'sf-due',payDate:'sf-pay-date',payNotes:'sf-pay-notes',docNotes:'sf-doc-notes',discountScheme:'sf-discount-scheme',paymentTerm:'sf-pay-mode'}).forEach(([k,elId])=>{
     const el=document.getElementById(elId); if(el) el.value=flds[k];
   });
+  // Discount
+  const discPctEl = document.getElementById('sf-discount-pct');
+  const totalOrigEl = document.getElementById('sf-total-original');
+  if (discPctEl) discPctEl.value = s ? (s.discountPct||'') : '';
+  if (totalOrigEl) totalOrigEl.value = s ? (s.totalOriginal||s.total||'') : '';
+  const discPreview = document.getElementById('sf-discount-preview');
+  if (discPreview) discPreview.style.display = 'none';
   // Grades
   const gs=s?s.grades||{}:{};
   ['math','eng','sci','hist','art','pe'].forEach(k=>{ const el=document.getElementById('sf-g-'+k); if(el) el.value=gs[k]||''; });
@@ -1230,6 +1367,27 @@ function autoPayStatus() {
   const t=parseFloat(document.getElementById('sf-total').value)||0;
   const p=parseFloat(document.getElementById('sf-paid').value)||0;
   document.getElementById('sf-pay-status').value=p>=t&&t>0?'paid':p>0?'partial':'unpaid';
+}
+
+function applyDiscountScheme() {
+  const orig = parseFloat(document.getElementById('sf-total-original').value)||0;
+  const pct  = parseFloat(document.getElementById('sf-discount-pct').value)||0;
+  const scheme = document.getElementById('sf-discount-scheme').value;
+  const preview = document.getElementById('sf-discount-preview');
+
+  if (orig > 0 && pct > 0) {
+    const discAmt = orig * pct / 100;
+    const afterDisc = orig - discAmt;
+    document.getElementById('sf-total').value = afterDisc.toFixed(2);
+    preview.style.display = 'block';
+    preview.innerHTML = `<strong>${scheme||'Discount'} (${pct}%)</strong> — Original: $${orig.toFixed(2)} &nbsp;→&nbsp; Discount: <span style="color:var(--danger)">-$${discAmt.toFixed(2)}</span> &nbsp;→&nbsp; <strong>Fee after discount: $${afterDisc.toFixed(2)}</strong>`;
+    autoPayStatus();
+  } else if (orig > 0) {
+    document.getElementById('sf-total').value = orig.toFixed(2);
+    preview.style.display = 'none';
+  } else {
+    preview.style.display = 'none';
+  }
 }
 function autoPayStatusModal() {
   const t=parseFloat(document.getElementById('pf-total').value)||0;
@@ -1242,7 +1400,12 @@ function saveStudent() {
   const last=document.getElementById('sf-last').value.trim();
   if(!first||!last){ alert('First and last name are required.'); return; }
   const grades={math:parseFloat(document.getElementById('sf-g-math').value)||0,eng:parseFloat(document.getElementById('sf-g-eng').value)||0,sci:parseFloat(document.getElementById('sf-g-sci').value)||0,hist:parseFloat(document.getElementById('sf-g-hist').value)||0,art:parseFloat(document.getElementById('sf-g-art').value)||0,pe:parseFloat(document.getElementById('sf-g-pe').value)||0};
-  const data={first,last,dob:document.getElementById('sf-dob').value,gender:document.getElementById('sf-gender').value,address:document.getElementById('sf-address').value,sid:document.getElementById('sf-id').value||'STU-'+String(nextId()).padStart(3,'0'),status:document.getElementById('sf-status').value,grade:document.getElementById('sf-grade').value,class:document.getElementById('sf-class').value,enroll:document.getElementById('sf-enroll').value,teacher:document.getElementById('sf-teacher').value,parent:document.getElementById('sf-parent').value,rel:document.getElementById('sf-rel').value,phone:document.getElementById('sf-phone').value,email:document.getElementById('sf-email').value,emerName:document.getElementById('sf-emer-name').value,emerPhone:document.getElementById('sf-emer-phone').value,emerRel:document.getElementById('sf-emer-rel').value,medical:document.getElementById('sf-medical').value,feeType:document.getElementById('sf-fee-type').value,total:parseFloat(document.getElementById('sf-total').value)||0,paid:parseFloat(document.getElementById('sf-paid').value)||0,payStatus:document.getElementById('sf-pay-status').value,due:document.getElementById('sf-due').value,payDate:document.getElementById('sf-pay-date').value,payNotes:document.getElementById('sf-pay-notes').value,docNotes:document.getElementById('sf-doc-notes').value,grades};
+  const totalOrig = parseFloat(document.getElementById('sf-total-original').value)||0;
+  const discPct   = parseFloat(document.getElementById('sf-discount-pct').value)||0;
+  const discScheme= document.getElementById('sf-discount-scheme').value;
+  const totalAfter= parseFloat(document.getElementById('sf-total').value)||0;
+  const discAmt   = totalOrig > 0 && discPct > 0 ? totalOrig * discPct / 100 : 0;
+  const data={first,last,dob:document.getElementById('sf-dob').value,gender:document.getElementById('sf-gender').value,address:document.getElementById('sf-address').value,sid:document.getElementById('sf-id').value||'STU-'+String(nextId()).padStart(3,'0'),status:document.getElementById('sf-status').value,grade:document.getElementById('sf-grade').value,class:document.getElementById('sf-class').value,enroll:document.getElementById('sf-enroll').value,teacher:document.getElementById('sf-teacher').value,parent:document.getElementById('sf-parent').value,rel:document.getElementById('sf-rel').value,phone:document.getElementById('sf-phone').value,email:document.getElementById('sf-email').value,emerName:document.getElementById('sf-emer-name').value,emerPhone:document.getElementById('sf-emer-phone').value,emerRel:document.getElementById('sf-emer-rel').value,medical:document.getElementById('sf-medical').value,feeType:document.getElementById('sf-fee-type').value,totalOriginal:totalOrig||totalAfter,total:totalAfter,discountScheme:discScheme,discountPct:discPct,discountAmt:discAmt,paid:parseFloat(document.getElementById('sf-paid').value)||0,payStatus:document.getElementById('sf-pay-status').value,paymentTerm:document.getElementById('sf-pay-mode').value,due:document.getElementById('sf-due').value,payDate:document.getElementById('sf-pay-date').value,payNotes:document.getElementById('sf-pay-notes').value,docNotes:document.getElementById('sf-doc-notes').value,grades};
   if(editStudentId) { Object.assign(db.students.find(s=>s.id===editStudentId),data); }
   else { db.students.push({id:nextId(),...data}); }
   saveDB(); closeModal('student-modal');
@@ -1343,9 +1506,14 @@ function openProfile(id) {
         <div class="info-grid">
           <div class="info-item"><label>Fee type</label><p style="text-transform:capitalize">${s.feeType||'—'}</p></div>
           <div class="info-item"><label>Status</label><p>${payBadge(s.payStatus)}</p></div>
-          <div class="info-item"><label>Total fee</label><p>${fmtMoney(s.total)}</p></div>
+          <div class="info-item"><label>Original fee</label><p>${fmtMoney(s.totalOriginal||s.total)}</p></div>
+          <div class="info-item"><label>Discount scheme</label><p>${s.discountScheme||'—'}</p></div>
+          <div class="info-item"><label>Discount %</label><p>${s.discountPct?s.discountPct+'%':'—'}</p></div>
+          <div class="info-item"><label>Discount amount</label><p style="color:var(--danger)">${s.discountAmt?'-'+fmtMoney(s.discountAmt):'—'}</p></div>
+          <div class="info-item"><label>Fee after discount</label><p style="font-weight:500">${fmtMoney(s.total)}</p></div>
           <div class="info-item"><label>Paid</label><p style="color:var(--accent)">${fmtMoney(s.paid)}</p></div>
           <div class="info-item"><label>Balance</label><p style="color:${bal>0?'var(--danger)':'var(--accent)'};font-weight:500">${fmtMoney(bal)}</p></div>
+          <div class="info-item"><label>Payment mode</label><p>${s.paymentTerm||'—'}</p></div>
           <div class="info-item"><label>Due date</label><p>${s.due||'—'}</p></div>
           <div class="info-item"><label>Payment date</label><p>${s.payDate||'—'}</p></div>
         </div>
@@ -1692,6 +1860,217 @@ function renderBackupStatus() {
   `;
 }
 
+// ── Microsoft Authentication ───────────────────────────────────────────────
+const msalConfig = {
+  auth: {
+    clientId: "7ce4eb72-2bee-4298-8305-04c38de64a52",
+    authority: "https://login.microsoftonline.com/add6b2b0-2cc6-4662-aff9-b9769e296ad3",
+    redirectUri: window.location.origin + window.location.pathname,
+  },
+  cache: { cacheLocation: "sessionStorage", storeAuthStateInCookie: false },
+};
+
+// Role assignments — map staff email to role
+// Admin can update this list via the Admin Tools panel
+const DEFAULT_ROLES = {
+  // Add staff emails and roles here after first login
+  // "staff@tgis.edu.kh": "admin",
+};
+
+const ROLE_PERMISSIONS = {
+  admin:          ['dashboard','students','attendance','payments','reports','admin'],
+  finance:        ['dashboard','payments','reports'],
+  principal:      ['dashboard','students','attendance','payments','reports'],
+  student_service:['dashboard','students','attendance'],
+};
+
+let msalInstance = null;
+let currentUser  = null;
+let currentRole  = null;
+
+async function initMSAL() {
+  try {
+    msalInstance = new msal.PublicClientApplication(msalConfig);
+    await msalInstance.initialize();
+
+    // Handle redirect response
+    const response = await msalInstance.handleRedirectPromise();
+    if (response) {
+      handleLoginSuccess(response);
+      return;
+    }
+
+    // Check if already signed in
+    const accounts = msalInstance.getAllAccounts();
+    if (accounts.length > 0) {
+      currentUser = accounts[0];
+      assignRole();
+      showApp();
+    } else {
+      showLogin();
+    }
+  } catch(err) {
+    console.error('MSAL init error:', err);
+    showLogin();
+  }
+}
+
+async function signIn() {
+  document.getElementById('login-loading').style.display = 'block';
+  document.getElementById('ms-login-btn').disabled = true;
+  document.getElementById('login-error').style.display = 'none';
+  try {
+    await msalInstance.loginRedirect({
+      scopes: ['openid','profile','email','User.Read'],
+      prompt: 'select_account',
+    });
+  } catch(err) {
+    document.getElementById('login-loading').style.display = 'none';
+    document.getElementById('ms-login-btn').disabled = false;
+    showLoginError('Sign in failed: ' + (err.message||'Unknown error'));
+  }
+}
+
+function handleLoginSuccess(response) {
+  currentUser = response.account;
+  assignRole();
+  showApp();
+}
+
+function assignRole() {
+  if (!currentUser) return;
+  const email = (currentUser.username||'').toLowerCase();
+  // Check stored roles first (set by admin)
+  const storedRoles = db.staffRoles || {};
+  if (storedRoles[email]) {
+    currentRole = storedRoles[email];
+  } else if (DEFAULT_ROLES[email]) {
+    currentRole = DEFAULT_ROLES[email];
+  } else {
+    // First user to log in becomes admin if no roles set yet
+    const hasAnyRoles = Object.keys({...DEFAULT_ROLES, ...storedRoles}).length > 0;
+    currentRole = hasAnyRoles ? 'student_service' : 'admin';
+  }
+}
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('main-shell').style.display = 'flex';
+
+  // Show user info in topbar
+  const nameEl = document.getElementById('user-name-display');
+  const roleEl = document.getElementById('user-role-display');
+  const barEl  = document.getElementById('user-info-bar');
+  if (nameEl) nameEl.textContent = currentUser?.name || currentUser?.username || '';
+  if (roleEl) roleEl.textContent = (currentRole||'').replace('_',' ').toUpperCase();
+  if (barEl)  barEl.style.display = 'flex';
+
+  applyRolePermissions();
+  loadDB();
+  checkAutoPromotion();
+  renderDashboard();
+}
+
+function applyRolePermissions() {
+  const allowed = ROLE_PERMISSIONS[currentRole] || ROLE_PERMISSIONS['student_service'];
+
+  // Hide nav items not permitted
+  const navMap = {dashboard:'nav-dashboard',students:'nav-students',attendance:'nav-attendance',payments:'nav-payments',reports:'nav-reports',admin:'nav-admin'};
+  Object.entries(navMap).forEach(([view, navId]) => {
+    const el = document.getElementById(navId);
+    if (el) el.style.display = allowed.includes(view) ? '' : 'none';
+  });
+
+  // Hide add student / import for non-admin non-student_service
+  const canEdit = ['admin','student_service'].includes(currentRole);
+  const addBtn  = document.getElementById('btn-add-student');
+  if (addBtn) addBtn.style.display = canEdit ? '' : 'none';
+
+  // Principal = view only, hide edit/delete buttons
+  if (currentRole === 'principal') {
+    document.querySelectorAll('.btn-danger, [onclick*="openEdit"], [onclick*="deleteStudent"], [onclick*="openStudentModal"], [onclick*="openPayModal"]').forEach(el=>{
+      el.style.display='none';
+    });
+  }
+}
+
+function showLogin() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('main-shell').style.display = 'none';
+}
+
+function showLoginError(msg) {
+  const el = document.getElementById('login-error');
+  if (el) { el.textContent = msg; el.style.display = 'block'; }
+}
+
+function signOut() {
+  if (!msalInstance) return;
+  msalInstance.logoutRedirect({ postLogoutRedirectUri: window.location.href });
+}
+
+function canAccess(view) {
+  const allowed = ROLE_PERMISSIONS[currentRole] || [];
+  return allowed.includes(view);
+}
+
+// Override showView to enforce permissions
+const _origShowView = showView;
+function showView(v) {
+  if (currentRole && !canAccess(v)) {
+    document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+    document.getElementById('view-'+v) && (document.getElementById('view-'+v).innerHTML = `
+      <div class="access-denied">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+        <h3>Access restricted</h3>
+        <p>Your role (${(currentRole||'').replace('_',' ')}) does not have permission to view this section.</p>
+      </div>`);
+    return;
+  }
+  _origShowView(v);
+}
+
+// ── Staff Role Management ──────────────────────────────────────────────────
+function addStaffRole() {
+  if (currentRole !== 'admin') { alert('Only admins can manage staff roles.'); return; }
+  const email = (document.getElementById('role-email').value||'').trim().toLowerCase();
+  const role  = document.getElementById('role-select').value;
+  if (!email || !email.includes('@')) { alert('Please enter a valid email address.'); return; }
+  if (!db.staffRoles) db.staffRoles = {};
+  db.staffRoles[email] = role;
+  saveDB();
+  document.getElementById('role-email').value = '';
+  renderStaffRoles();
+}
+
+function removeStaffRole(email) {
+  if (currentRole !== 'admin') return;
+  if (!confirm('Remove access for ' + email + '?')) return;
+  delete db.staffRoles[email];
+  saveDB();
+  renderStaffRoles();
+}
+
+function renderStaffRoles() {
+  const el = document.getElementById('staff-role-list');
+  if (!el) return;
+  const roles = db.staffRoles || {};
+  const roleLabels = {admin:'Admin',finance:'Finance',principal:'Principal',student_service:'Student Service'};
+  const roleColors = {admin:'badge-red',finance:'badge-info',principal:'badge-green',student_service:'badge-warn'};
+  const entries = Object.entries(roles);
+  el.innerHTML = entries.length ? `
+    <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Current staff (${entries.length})</div>
+    ${entries.map(([email,role])=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+        <span style="color:var(--text2)">${email}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="badge ${roleColors[role]||'badge-gray'}">${roleLabels[role]||role}</span>
+          <button class="btn btn-sm" style="color:var(--danger);padding:3px 8px" onclick="removeStaffRole('${email}')">Remove</button>
+        </div>
+      </div>`).join('')}` :
+    '<p style="font-size:12px;color:var(--text3)">No staff added yet. Add emails above to grant access.</p>';
+}
+
 // ── Blur Toggle ────────────────────────────────────────────────────────────
 function toggleBlur() {
   window._amountsBlurred = !window._amountsBlurred;
@@ -1758,6 +2137,7 @@ function runPromotion(isAuto) {
   // Record promotion in history
   if (!db.promotionHistory) db.promotionHistory = [];
   setTimeout(renderBackupStatus, 50);
+  setTimeout(renderStaffRoles, 50);
   db.promotionHistory.push({
     date: new Date().toISOString().split('T')[0],
     promoted,
@@ -1802,6 +2182,7 @@ function renderAdmin() {
 
   if (!db.promotionHistory) db.promotionHistory = [];
   setTimeout(renderBackupStatus, 50);
+  setTimeout(renderStaffRoles, 50);
   document.getElementById('promo-history').innerHTML = db.promotionHistory.length
     ? [...db.promotionHistory].reverse().map(h => `
         <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
@@ -1813,9 +2194,8 @@ function renderAdmin() {
 }
 
 // ── Init ────────────────────────────────────────────────────────────────────
-loadDB();
-checkAutoPromotion();
-renderDashboard();
+// Init handled by MSAL showApp()
+initMSAL();
 </script>
 
 <!-- Import Result Modal -->
