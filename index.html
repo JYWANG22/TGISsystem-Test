@@ -273,6 +273,16 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--text2
       Reports
     </div>
     <div class="nav-section">Admin</div>
+    <div class="nav-item" onclick="showView('appeals')" id="nav-appeals">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Fee Appeals
+      <span id="appeals-badge" style="background:#E24B4A;color:#fff;border-radius:99px;font-size:10px;padding:1px 6px;margin-left:auto;display:none">0</span>
+    </div>
+    <div class="nav-item" onclick="showView('complaints')" id="nav-complaints">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Complaints
+      <span id="complaints-badge" style="background:#E24B4A;color:#fff;border-radius:99px;font-size:10px;padding:1px 6px;margin-left:auto;display:none">0</span>
+    </div>
     <div class="nav-item" onclick="showView('admin')" id="nav-admin">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       Admin Tools
@@ -505,6 +515,85 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--text2
       </div>
     </div>
 
+    <!-- APPEALS -->
+    <div class="view" id="view-appeals">
+      <div class="card-grid" id="appeals-metrics"></div>
+      <div class="table-wrap">
+        <div class="table-toolbar" style="justify-content:space-between;flex-wrap:wrap;gap:10px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <div class="search-wrap">
+              <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="appeals-search" placeholder="Search by name, ID, ref…" oninput="renderAppeals()">
+            </div>
+            <select id="appeals-filter-status" onchange="renderAppeals()" style="width:auto">
+              <option value="">All statuses</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+            <select id="appeals-filter-type" onchange="renderAppeals()" style="width:auto">
+              <option value="">All types</option>
+              <option value="installment">Installment Plan</option>
+              <option value="reduction">Fee Reduction</option>
+              <option value="extension">Deadline Extension</option>
+            </select>
+          </div>
+          <a href="appeal.html" target="_blank" class="btn btn-sm">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            Open appeal form
+          </a>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Ref</th><th>Student</th><th>Grade</th><th>Parent</th><th>Type</th><th>Submitted</th><th>Status</th><th>Action</th></tr>
+          </thead>
+          <tbody id="appeals-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- COMPLAINTS -->
+    <div class="view" id="view-complaints">
+      <div class="card-grid" id="complaints-metrics"></div>
+      <div class="table-wrap">
+        <div class="table-toolbar" style="justify-content:space-between;flex-wrap:wrap;gap:10px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <div class="search-wrap">
+              <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="complaints-search" placeholder="Search by name, ref, category…" oninput="renderComplaints()">
+            </div>
+            <select id="complaints-filter-status" onchange="renderComplaints()" style="width:auto">
+              <option value="">All statuses</option>
+              <option value="open">Open</option>
+              <option value="in_progress">In Progress</option>
+              <option value="resolved">Resolved</option>
+              <option value="closed">Closed</option>
+            </select>
+            <select id="complaints-filter-cat" onchange="renderComplaints()" style="width:auto">
+              <option value="">All categories</option>
+              <option value="academic">Academic</option>
+              <option value="staff">Staff Conduct</option>
+              <option value="facilities">Facilities</option>
+              <option value="billing">Billing</option>
+              <option value="safety">Safety</option>
+              <option value="communication">Communication</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <a href="complaint.html" target="_blank" class="btn btn-sm">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            Open complaint form
+          </a>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Ref</th><th>Student</th><th>Grade</th><th>Parent</th><th>Category</th><th>Incident date</th><th>Status</th><th>Action</th></tr>
+          </thead>
+          <tbody id="complaints-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- ADMIN -->
     <div class="view" id="view-admin">
       <div class="card" style="margin-bottom:18px">
@@ -592,6 +681,40 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--text2
 </div>
 
 </div><!-- end main-shell -->
+
+<!-- Complaint Detail Modal -->
+<div class="overlay" id="complaint-detail-modal">
+  <div class="modal" style="max-width:620px">
+    <div class="modal-header">
+      <h2>Complaint — <span id="complaint-detail-ref" style="font-family:monospace;font-size:14px"></span></h2>
+      <button class="btn btn-sm btn-icon" onclick="closeModal('complaint-detail-modal')" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="complaint-detail-content"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('complaint-detail-modal')">Close</button>
+      <button class="btn btn-primary" onclick="saveComplaintDecision()">Save response</button>
+    </div>
+  </div>
+</div>
+
+<!-- Appeal Detail Modal -->
+<div class="overlay" id="appeal-detail-modal">
+  <div class="modal" style="max-width:620px">
+    <div class="modal-header">
+      <h2>Appeal — <span id="appeal-detail-ref" style="font-family:monospace;font-size:14px"></span></h2>
+      <button class="btn btn-sm btn-icon" onclick="closeModal('appeal-detail-modal')" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="appeal-detail-content"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('appeal-detail-modal')">Close</button>
+      <button class="btn btn-primary" onclick="saveAppealDecision()">Save decision</button>
+    </div>
+  </div>
+</div>
 
 <!-- Student Add/Edit Modal -->
 <div class="overlay" id="student-modal">
@@ -865,13 +988,15 @@ function showView(v) {
   document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
   document.getElementById('view-'+v).classList.add('active');
   document.getElementById('nav-'+v).classList.add('active');
-  const titles = {dashboard:'Dashboard',students:'All students',attendance:'Attendance',payments:'Payments',reports:'Reports',admin:'Admin Tools'};
+  const titles = {dashboard:'Dashboard',students:'All students',attendance:'Attendance',payments:'Payments',reports:'Reports',appeals:'Fee Appeals',complaints:'Complaints',admin:'Admin Tools'};
   document.getElementById('topbar-title').textContent = titles[v]||v;
   if(v==='dashboard') renderDashboard();
   if(v==='students') renderStudentTable();
   if(v==='attendance') renderAttendance();
   if(v==='payments') renderPaymentTable();
   if(v==='reports') renderReports();
+  if(v==='appeals') renderAppeals();
+  if(v==='complaints') renderComplaints();
   if(v==='admin') renderAdmin();
 }
 
@@ -1903,9 +2028,9 @@ const DEFAULT_ROLES = {
 };
 
 const ROLE_PERMISSIONS = {
-  admin:          ['dashboard','students','attendance','payments','reports','admin'],
-  finance:        ['dashboard','payments','reports'],
-  principal:      ['dashboard','students','attendance','payments','reports'],
+  admin:          ['dashboard','students','attendance','payments','reports','appeals','complaints','admin'],
+  finance:        ['dashboard','payments','reports','appeals','complaints'],
+  principal:      ['dashboard','students','attendance','payments','reports','appeals','complaints'],
   student_service:['dashboard','students','attendance'],
 };
 
@@ -2048,6 +2173,8 @@ function showApp() {
   loadDB();
   checkAutoPromotion();
   renderDashboard();
+  updateAppealsBadge();
+  updateComplaintsBadge();
 }
 
 function applyRolePermissions() {
@@ -2148,6 +2275,297 @@ function renderStaffRoles() {
         </div>
       </div>`).join('')}` :
     '<p style="font-size:12px;color:var(--text3)">No staff added yet. Add emails above to grant access.</p>';
+}
+
+// ── Fee Appeals ────────────────────────────────────────────────────────────
+const APPEALS_KEY = 'tg_appeals_v1';
+
+function loadAppeals() {
+  try { return JSON.parse(localStorage.getItem(APPEALS_KEY)) || []; } catch(e) { return []; }
+}
+
+function saveAppeals(appeals) {
+  localStorage.setItem(APPEALS_KEY, JSON.stringify(appeals));
+}
+
+function updateAppealsBadge() {
+  const appeals = loadAppeals();
+  const pending = appeals.filter(a=>a.status==='pending').length;
+  const badge = document.getElementById('appeals-badge');
+  if (badge) {
+    badge.textContent = pending;
+    badge.style.display = pending > 0 ? 'inline' : 'none';
+  }
+}
+
+function renderAppeals() {
+  const appeals = loadAppeals();
+  const q = (document.getElementById('appeals-search')?.value||'').toLowerCase();
+  const fs = document.getElementById('appeals-filter-status')?.value||'';
+  const ft = document.getElementById('appeals-filter-type')?.value||'';
+
+  // Metrics
+  const total   = appeals.length;
+  const pending  = appeals.filter(a=>a.status==='pending').length;
+  const approved = appeals.filter(a=>a.status==='approved').length;
+  const rejected = appeals.filter(a=>a.status==='rejected').length;
+  document.getElementById('appeals-metrics').innerHTML = `
+    <div class="metric-card"><div class="metric-label">Total appeals</div><div class="metric-value">${total}</div></div>
+    <div class="metric-card warn"><div class="metric-label">Pending review</div><div class="metric-value">${pending}</div></div>
+    <div class="metric-card green"><div class="metric-label">Approved</div><div class="metric-value">${approved}</div></div>
+    <div class="metric-card red"><div class="metric-label">Rejected</div><div class="metric-value">${rejected}</div></div>
+  `;
+
+  const filtered = appeals.filter(a=>{
+    const txt = (a.studentName+' '+a.studentId+' '+a.ref+' '+a.parentName).toLowerCase();
+    if(q && !txt.includes(q)) return false;
+    if(fs && a.status!==fs) return false;
+    if(ft && !a.appealTypes.includes(ft)) return false;
+    return true;
+  }).sort((a,b)=>new Date(b.submittedAt)-new Date(a.submittedAt));
+
+  const typeLabels = {installment:'Installment',reduction:'Fee Reduction',extension:'Extension'};
+  const statusBadgeMap = {
+    pending: '<span class="badge badge-warn">Pending</span>',
+    approved:'<span class="badge badge-green">Approved</span>',
+    rejected:'<span class="badge badge-red">Rejected</span>',
+  };
+
+  const tbody = document.getElementById('appeals-tbody');
+  tbody.innerHTML = filtered.length ? filtered.map(a=>`
+    <tr>
+      <td style="font-family:monospace;font-size:11px">${a.ref}</td>
+      <td><div style="font-weight:500;font-size:13px">${a.studentName}</div><div style="font-size:11px;color:var(--text3)">${a.studentId}</div></td>
+      <td style="font-size:12px">${a.grade}</td>
+      <td><div style="font-size:13px">${a.parentName}</div><div style="font-size:11px;color:var(--text3)">${a.phone}</div></td>
+      <td style="font-size:12px">${a.appealTypes.map(t=>`<span class="badge badge-info" style="margin-bottom:2px">${typeLabels[t]||t}</span>`).join('<br>')}</td>
+      <td style="font-size:11px;color:var(--text2)">${new Date(a.submittedAt).toLocaleDateString()}</td>
+      <td>${statusBadgeMap[a.status]||a.status}</td>
+      <td>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-sm" onclick="openAppealDetail('${a.ref}')">Review</button>
+        </div>
+      </td>
+    </tr>`).join('') :
+    `<tr><td colspan="8" class="empty-state"><p>No appeals found.</p></td></tr>`;
+
+  updateAppealsBadge();
+  updateComplaintsBadge();
+}
+
+function openAppealDetail(ref) {
+  const appeals = loadAppeals();
+  const a = appeals.find(x=>x.ref===ref);
+  if (!a) return;
+  const typeLabels = {installment:'Installment Plan',reduction:'Fee Reduction / Discount',extension:'Payment Deadline Extension'};
+
+  document.getElementById('appeal-detail-content').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
+      <div class="info-item"><label>Reference</label><p style="font-family:monospace">${a.ref}</p></div>
+      <div class="info-item"><label>Submitted</label><p>${new Date(a.submittedAt).toLocaleString()}</p></div>
+      <div class="info-item"><label>Student</label><p>${a.studentName} (${a.studentId})</p></div>
+      <div class="info-item"><label>Grade</label><p>${a.grade} · ${a.ay}</p></div>
+      <div class="info-item"><label>Parent</label><p>${a.parentName} (${a.relationship||'—'})</p></div>
+      <div class="info-item"><label>Phone</label><p>${a.phone}</p></div>
+      <div class="info-item"><label>Email</label><p>${a.email||'—'}</p></div>
+      <div class="info-item"><label>Appeal types</label><p>${a.appealTypes.map(t=>typeLabels[t]||t).join(', ')}</p></div>
+      ${a.amount?`<div class="info-item"><label>Outstanding amount</label><p>${fmtMoney(a.amount)}</p></div>`:''}
+      ${a.proposed?`<div class="info-item"><label>Proposed payment</label><p>${fmtMoney(a.proposed)}</p></div>`:''}
+      ${a.proposedDate?`<div class="info-item"><label>Proposed date</label><p>${a.proposedDate}</p></div>`:''}
+    </div>
+    <div class="section-card" style="margin-bottom:12px">
+      <h4>Reason for appeal</h4>
+      <p style="font-size:13px;line-height:1.7;white-space:pre-wrap">${a.reason}</p>
+    </div>
+    ${a.notes?`<div class="section-card" style="margin-bottom:12px"><h4>Additional notes</h4><p style="font-size:13px;line-height:1.7">${a.notes}</p></div>`:''}
+    ${a.files&&a.files.length?`<div class="section-card" style="margin-bottom:12px">
+      <h4 style="margin-bottom:10px">Uploaded documents (${a.files.length})</h4>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        ${a.files.map(f=>f.type.startsWith('image/')?
+          `<a href="${f.data}" target="_blank"><img src="${f.data}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--border)" title="${f.name}"></a>`:
+          `<a href="${f.data}" download="${f.name}" class="btn btn-sm"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> ${f.name}</a>`
+        ).join('')}
+      </div>
+    </div>`:''}
+    <div class="section-card">
+      <h4 style="margin-bottom:10px">Admin decision</h4>
+      <div class="field"><label class="field-label">Status</label>
+        <select id="appeal-status-select" style="width:auto">
+          <option value="pending" ${a.status==='pending'?'selected':''}>Pending</option>
+          <option value="approved" ${a.status==='approved'?'selected':''}>Approved</option>
+          <option value="rejected" ${a.status==='rejected'?'selected':''}>Rejected</option>
+        </select>
+      </div>
+      <div class="field"><label class="field-label">Admin notes</label>
+        <textarea id="appeal-admin-notes" placeholder="Add decision notes, conditions, or follow-up actions…" style="min-height:80px">${a.adminNotes||''}</textarea>
+      </div>
+      ${a.decidedAt?`<p style="font-size:11px;color:var(--text3)">Last updated: ${new Date(a.decidedAt).toLocaleString()}</p>`:''}
+    </div>
+  `;
+  document.getElementById('appeal-detail-ref').textContent = ref;
+  document.getElementById('appeal-detail-modal').classList.add('open');
+}
+
+function saveAppealDecision() {
+  const ref = document.getElementById('appeal-detail-ref').textContent;
+  const appeals = loadAppeals();
+  const idx = appeals.findIndex(a=>a.ref===ref);
+  if (idx<0) return;
+  appeals[idx].status = document.getElementById('appeal-status-select').value;
+  appeals[idx].adminNotes = document.getElementById('appeal-admin-notes').value;
+  appeals[idx].decidedAt = new Date().toISOString();
+
+  // If approved, find matching student and offer to update discount
+  if (appeals[idx].status==='approved') {
+    const a = appeals[idx];
+    const student = db.students.find(s=>
+      s.sid?.toLowerCase()===a.studentId?.toLowerCase() ||
+      [s.first,s.last].filter(Boolean).join(' ').toLowerCase()===a.studentName?.toLowerCase()
+    );
+    if (student && confirm(`Update ${a.studentName}'s payment record in the system to reflect this approval?`)) {
+      if (a.appealTypes.includes('extension') && a.proposedDate) student.due = a.proposedDate;
+      if (a.appealTypes.includes('installment') && a.proposed) {
+        student.payNotes = (student.payNotes?student.payNotes+' | ':'')+`Appeal approved: Installment plan - ${fmtMoney(a.proposed)} by ${a.proposedDate||'TBD'}`;
+      }
+      student.payStatus = 'partial';
+      saveDB();
+    }
+  }
+
+  saveAppeals(appeals);
+  closeModal('appeal-detail-modal');
+  renderAppeals();
+  alert('Decision saved successfully.');
+}
+
+// ── Complaints ─────────────────────────────────────────────────────────────
+const COMPLAINTS_KEY = 'tg_complaints_v1';
+
+function loadComplaints() {
+  try { return JSON.parse(localStorage.getItem(COMPLAINTS_KEY))||[]; } catch(e) { return []; }
+}
+function saveComplaints(c) { localStorage.setItem(COMPLAINTS_KEY, JSON.stringify(c)); }
+
+function updateComplaintsBadge() {
+  const c = loadComplaints().filter(x=>x.status==='open').length;
+  const badge = document.getElementById('complaints-badge');
+  if(badge){ badge.textContent=c; badge.style.display=c>0?'inline':'none'; }
+}
+
+const CAT_LABELS = {academic:'Academic',staff:'Staff Conduct',facilities:'Facilities',billing:'Billing',safety:'Safety',communication:'Communication',other:'Other'};
+const STATUS_BADGE = {
+  open:'<span class="badge badge-red">Open</span>',
+  in_progress:'<span class="badge badge-warn">In Progress</span>',
+  resolved:'<span class="badge badge-green">Resolved</span>',
+  closed:'<span class="badge badge-gray">Closed</span>',
+};
+
+function renderComplaints() {
+  const complaints = loadComplaints();
+  const q=(document.getElementById('complaints-search')?.value||'').toLowerCase();
+  const fs=document.getElementById('complaints-filter-status')?.value||'';
+  const fc=document.getElementById('complaints-filter-cat')?.value||'';
+
+  const total=complaints.length;
+  const open=complaints.filter(c=>c.status==='open').length;
+  const inprog=complaints.filter(c=>c.status==='in_progress').length;
+  const resolved=complaints.filter(c=>c.status==='resolved'||c.status==='closed').length;
+
+  document.getElementById('complaints-metrics').innerHTML=`
+    <div class="metric-card"><div class="metric-label">Total complaints</div><div class="metric-value">${total}</div></div>
+    <div class="metric-card red"><div class="metric-label">Open</div><div class="metric-value">${open}</div></div>
+    <div class="metric-card warn"><div class="metric-label">In progress</div><div class="metric-value">${inprog}</div></div>
+    <div class="metric-card green"><div class="metric-label">Resolved</div><div class="metric-value">${resolved}</div></div>
+  `;
+
+  const filtered=complaints.filter(c=>{
+    const txt=(c.studentName+' '+c.name+' '+c.ref+' '+(CAT_LABELS[c.category]||'')).toLowerCase();
+    if(q&&!txt.includes(q)) return false;
+    if(fs&&c.status!==fs) return false;
+    if(fc&&c.category!==fc) return false;
+    return true;
+  }).sort((a,b)=>new Date(b.submittedAt)-new Date(a.submittedAt));
+
+  document.getElementById('complaints-tbody').innerHTML=filtered.length?filtered.map(c=>`
+    <tr>
+      <td style="font-family:monospace;font-size:11px">${c.ref}</td>
+      <td><div style="font-weight:500;font-size:13px">${c.studentName}</div><div style="font-size:11px;color:var(--text3)">${c.studentId||'—'}</div></td>
+      <td style="font-size:12px">${c.grade}</td>
+      <td><div style="font-size:13px">${c.name}</div><div style="font-size:11px;color:var(--text3)">${c.phone}</div></td>
+      <td><span class="badge badge-info">${CAT_LABELS[c.category]||c.category}</span></td>
+      <td style="font-size:11px;color:var(--text2)">${c.incidentDate||'—'}</td>
+      <td>${STATUS_BADGE[c.status]||c.status}</td>
+      <td><button class="btn btn-sm" onclick="openComplaintDetail('${c.ref}')">Review</button></td>
+    </tr>`).join(''):
+    `<tr><td colspan="8" class="empty-state"><p>No complaints found.</p></td></tr>`;
+
+  updateComplaintsBadge();
+}
+
+function openComplaintDetail(ref) {
+  const complaints=loadComplaints();
+  const c=complaints.find(x=>x.ref===ref);
+  if(!c) return;
+
+  document.getElementById('complaint-detail-content').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
+      <div class="info-item"><label>Reference</label><p style="font-family:monospace">${c.ref}</p></div>
+      <div class="info-item"><label>Submitted</label><p>${new Date(c.submittedAt).toLocaleString()}</p></div>
+      <div class="info-item"><label>Category</label><p>${CAT_LABELS[c.category]||c.category}</p></div>
+      <div class="info-item"><label>Incident date</label><p>${c.incidentDate||'—'}</p></div>
+      <div class="info-item"><label>Student</label><p>${c.studentName} (${c.studentId||'—'})</p></div>
+      <div class="info-item"><label>Grade / Class</label><p>${c.grade} ${c.class?'· '+c.class:''}</p></div>
+      <div class="info-item"><label>Parent</label><p>${c.name} (${c.relationship||'—'})</p></div>
+      <div class="info-item"><label>Phone</label><p>${c.phone}</p></div>
+      <div class="info-item"><label>Email</label><p>${c.email||'—'}</p></div>
+      <div class="info-item"><label>Previously raised</label><p>${{no:'No','yes-verbal':'Yes — verbally','yes-written':'Yes — in writing'}[c.raised]||c.raised||'—'}</p></div>
+    </div>
+    <div class="section-card" style="margin-bottom:12px">
+      <h4>Description</h4>
+      <p style="font-size:13px;line-height:1.7;white-space:pre-wrap">${c.description}</p>
+    </div>
+    ${c.outcome?`<div class="section-card" style="margin-bottom:12px"><h4>Desired outcome</h4><p style="font-size:13px;line-height:1.7">${c.outcome}</p></div>`:''}
+    ${c.files&&c.files.length?`<div class="section-card" style="margin-bottom:12px">
+      <h4 style="margin-bottom:10px">Uploaded files (${c.files.length})</h4>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        ${c.files.map(f=>f.type.startsWith('image/')?
+          `<a href="${f.data}" target="_blank"><img src="${f.data}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--border)" title="${f.name}"></a>`:
+          `<a href="${f.data}" download="${f.name}" class="btn btn-sm"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> ${f.name}</a>`
+        ).join('')}
+      </div>
+    </div>`:''}
+    <div class="section-card">
+      <h4 style="margin-bottom:10px">Admin response</h4>
+      <div class="field"><label class="field-label">Status</label>
+        <select id="complaint-status-select" style="width:auto">
+          <option value="open" ${c.status==='open'?'selected':''}>Open</option>
+          <option value="in_progress" ${c.status==='in_progress'?'selected':''}>In Progress</option>
+          <option value="resolved" ${c.status==='resolved'?'selected':''}>Resolved</option>
+          <option value="closed" ${c.status==='closed'?'selected':''}>Closed</option>
+        </select>
+      </div>
+      <div class="field"><label class="field-label">Admin notes / response</label>
+        <textarea id="complaint-admin-notes" placeholder="Add investigation notes, actions taken, or response to parent…" style="min-height:90px">${c.adminNotes||''}</textarea>
+      </div>
+      ${c.decidedAt?`<p style="font-size:11px;color:var(--text3)">Last updated: ${new Date(c.decidedAt).toLocaleString()}</p>`:''}
+    </div>
+  `;
+  document.getElementById('complaint-detail-ref').textContent=ref;
+  document.getElementById('complaint-detail-modal').classList.add('open');
+}
+
+function saveComplaintDecision() {
+  const ref=document.getElementById('complaint-detail-ref').textContent;
+  const complaints=loadComplaints();
+  const idx=complaints.findIndex(c=>c.ref===ref);
+  if(idx<0) return;
+  complaints[idx].status=document.getElementById('complaint-status-select').value;
+  complaints[idx].adminNotes=document.getElementById('complaint-admin-notes').value;
+  complaints[idx].decidedAt=new Date().toISOString();
+  saveComplaints(complaints);
+  closeModal('complaint-detail-modal');
+  renderComplaints();
+  alert('Complaint updated successfully.');
 }
 
 // ── Blur Toggle ────────────────────────────────────────────────────────────
@@ -2273,8 +2691,10 @@ function renderAdmin() {
 }
 
 // ── Init ────────────────────────────────────────────────────────────────────
-// Init handled by MSAL showApp()
-initMSAL();
+// MSAL login temporarily disabled — direct access
+currentRole = 'admin';
+currentUser = {name:'Admin', username:'admin@tgis.edu.kh'};
+showApp();
 </script>
 
 <!-- Import Result Modal -->
