@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fee Appeal Form — TG International School</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--navy:#1B2A6B;--orange:#F7931E;--bg:#f7f6f3;--surface:#fff;--border:#e2e0d8;--text:#1a1917;--text2:#6b6860;--text3:#9e9b92;--radius:10px;--danger:#c0392b;--success:#1D9E75}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.header{background:linear-gradient(135deg,#1B2A6B,#111c4e);padding:28px 20px;text-align:center;color:#fff}
+.header img{width:80px;margin-bottom:12px;background:#fff;border-radius:10px;padding:6px}
+.header h1{font-size:20px;font-weight:600;margin-bottom:4px}
+.header p{font-size:13px;opacity:.7}
+.lang-bar{display:flex;justify-content:center;gap:8px;margin-top:14px;flex-wrap:wrap}
+.lang-btn{padding:5px 14px;border-radius:99px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;cursor:pointer;font-size:12px;font-family:inherit;transition:background .15s}
+.lang-btn.active{background:var(--orange);border-color:var(--orange)}
+.container{max-width:640px;margin:28px auto;padding:0 16px 40px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;margin-bottom:18px}
+.section-title{font-size:13px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.06em;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid var(--orange)}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.field input,.field select,.field textarea{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text);background:var(--surface);transition:border-color .15s,box-shadow .15s}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(27,42,107,.1)}
+.field textarea{resize:vertical;min-height:100px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.appeal-types{display:grid;grid-template-columns:1fr;gap:8px}
+.appeal-type{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:border-color .15s,background .15s}
+.appeal-type:hover{background:#f7f6f3}
+.appeal-type.selected{border-color:var(--navy);background:#eef0f9}
+.appeal-type input[type=checkbox]{margin-top:2px;accent-color:var(--navy);width:16px;height:16px;flex-shrink:0}
+.appeal-type-label{font-size:13px;font-weight:500}
+.appeal-type-desc{font-size:11px;color:var(--text3);margin-top:2px}
+.submit-btn{width:100%;padding:14px;background:var(--navy);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .15s;margin-top:8px}
+.submit-btn:hover{background:#111c4e}
+.submit-btn:disabled{opacity:.6;cursor:not-allowed}
+.success-screen{display:none;text-align:center;padding:40px 20px}
+.success-screen .icon{width:64px;height:64px;background:#e8f5ef;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.success-screen h2{font-size:20px;font-weight:600;color:var(--navy);margin-bottom:8px}
+.success-screen p{font-size:13px;color:var(--text2);line-height:1.6;max-width:360px;margin:0 auto}
+.ref-number{display:inline-block;margin-top:14px;padding:8px 20px;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;color:var(--navy)}
+.notice{background:#fef9ee;border:1px solid #f6e0a0;border-radius:8px;padding:12px 14px;font-size:12px;color:#b7791f;line-height:1.6;margin-bottom:16px}
+.required{color:var(--danger)}
+.lang-content{display:none}
+.lang-content.active{display:block}
+.footer{text-align:center;font-size:11px;color:var(--text3);padding:20px;border-top:1px solid var(--border);margin-top:20px}
+@media(max-width:500px){.form-row{grid-template-columns:1fr}}
+.upload-zone{border:2px dashed var(--border);border-radius:10px;padding:24px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;position:relative}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--navy);background:#eef0f9}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-zone .upload-icon{font-size:28px;margin-bottom:8px}
+.upload-zone p{font-size:13px;color:var(--text2);margin-bottom:4px}
+.upload-zone small{font-size:11px;color:var(--text3)}
+.file-list{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.file-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-size:12px}
+.file-item .file-name{display:flex;align-items:center;gap:8px;color:var(--text2)}
+.file-item .file-remove{background:none;border:none;cursor:pointer;color:var(--danger);font-size:16px;padding:0;line-height:1}
+.file-preview{width:40px;height:40px;object-fit:cover;border-radius:5px;border:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>TG International School</h1>
+  <p>Member of Crestar Education Group (Singapore)</p>
+  <div class="lang-bar">
+    <button class="lang-btn active" onclick="setLang('en')">English</button>
+    <button class="lang-btn" onclick="setLang('km')">ខ្មែរ</button>
+    <button class="lang-btn" onclick="setLang('zh')">中文</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- SUCCESS SCREEN -->
+  <div class="card success-screen" id="success-screen">
+    <div class="icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <h2 id="success-title">Appeal Submitted</h2>
+    <p id="success-msg">Thank you. Your fee appeal has been received. Our team will review your request and contact you within 3–5 working days.</p>
+    <div class="ref-number" id="ref-number"></div>
+    <p style="font-size:12px;color:var(--text3);margin-top:16px" id="success-note">Please save your reference number for follow-up.</p>
+  </div>
+
+  <!-- FORM -->
+  <div id="appeal-form">
+
+    <!-- ENGLISH -->
+    <div class="lang-content active" id="lang-en">
+      <div class="card">
+        <div class="notice">📋 This form is for parents who require assistance with school fee payment. All submissions are confidential and will be reviewed by the school administration.</div>
+        <div class="section-title">Student Information</div>
+        <div class="form-row">
+          <div class="field"><label>Student Full Name <span class="required">*</span></label><input type="text" id="en-student-name" placeholder="As per school records"></div>
+          <div class="field"><label>Student ID <span class="required">*</span></label><input type="text" id="en-student-id" placeholder="e.g. TGIS240023"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>Grade <span class="required">*</span></label>
+            <select id="en-grade">
+              <option value="">Select grade</option>
+              <option>Pre-Nursery (PN)</option><option>Nursery (N)</option>
+              <option>Kindergarten 1 (K1)</option><option>Kindergarten 2 (K2)</option>
+              <option>Grade 1</option><option>Grade 2</option><option>Grade 3</option>
+              <option>Grade 4</option><option>Grade 5</option><option>Grade 6</option>
+              <option>Grade 7</option><option>Grade 8</option><option>Grade 9</option>
+              <option>Grade 10</option><option>Grade 11</option><option>Grade 12</option>
+            </select>
+          </div>
+          <div class="field"><label>Academic Year</label><input type="text" id="en-ay" placeholder="e.g. AY 2026–27" value="AY 2026–27"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Parent / Guardian Information</div>
+        <div class="form-row">
+          <div class="field"><label>Parent / Guardian Name <span class="required">*</span></label><input type="text" id="en-parent-name" placeholder="Full name"></div>
+          <div class="field"><label>Relationship to Student</label>
+            <select id="en-relationship">
+              <option value="">Select</option>
+              <option>Mother</option><option>Father</option><option>Guardian</option><option>Grandparent</option><option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>Phone Number <span class="required">*</span></label><input type="tel" id="en-phone" placeholder="+855 xx xxx xxxx"></div>
+          <div class="field"><label>Email Address</label><input type="email" id="en-email" placeholder="parent@email.com"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Type of Appeal <span class="required">*</span></div>
+        <div class="appeal-types" id="en-appeal-types">
+          <label class="appeal-type">
+            <input type="checkbox" value="installment">
+            <div><div class="appeal-type-label">Installment Plan Request</div><div class="appeal-type-desc">Request to pay school fees in multiple smaller instalments over a period of time</div></div>
+          </label>
+          <label class="appeal-type">
+            <input type="checkbox" value="reduction">
+            <div><div class="appeal-type-label">Fee Reduction / Discount</div><div class="appeal-type-desc">Request for a reduction in the total school fee amount</div></div>
+          </label>
+          <label class="appeal-type">
+            <input type="checkbox" value="extension">
+            <div><div class="appeal-type-label">Payment Deadline Extension</div><div class="appeal-type-desc">Request for additional time to complete payment beyond the current due date</div></div>
+          </label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Appeal Details</div>
+        <div class="field"><label>Reason for Appeal <span class="required">*</span></label><textarea id="en-reason" placeholder="Please explain your financial situation and why you are requesting this assistance. The more detail you provide, the better we can assess your request."></textarea></div>
+        <div class="form-row">
+          <div class="field"><label>Current Outstanding Amount ($)</label><input type="number" id="en-amount" placeholder="0.00" min="0" step="0.01"></div>
+          <div class="field"><label>Proposed Payment Amount ($)</label><input type="number" id="en-proposed" placeholder="Amount you can pay now" min="0" step="0.01"></div>
+        </div>
+        <div class="field"><label>Proposed Payment Date</label><input type="date" id="en-proposed-date"></div>
+        <div class="field"><label>Supporting Documents</label>
+          <div class="upload-zone" id="en-upload-zone" ondragover="handleDrag(event,'en')" ondragleave="handleDragLeave(event,'en')" ondrop="handleDrop(event,'en')">
+            <input type="file" id="en-files" multiple accept="image/*,.pdf,.doc,.docx" onchange="handleFiles(event,'en')">
+            <div class="upload-icon">📎</div>
+            <p>Click or drag files here to upload</p>
+            <small>Employment letter, medical cert, photos · Max 5 files · 5MB each</small>
+          </div>
+          <div class="file-list" id="en-file-list"></div>
+        </div>
+        <div class="field"><label>Additional Notes</label><textarea id="en-notes" placeholder="Any other information you would like to share..." style="min-height:70px"></textarea></div>
+      </div>
+
+      <div class="card" style="background:#f7f6f3">
+        <div style="font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:16px">
+          <strong>Declaration:</strong> I hereby declare that the information provided in this form is true and accurate. I understand that TG International School will review my appeal and contact me with their decision within 3–5 working days.
+        </div>
+        <div class="field" style="margin:0">
+          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;text-transform:none;letter-spacing:0;font-size:13px;font-weight:400;color:var(--text)">
+            <input type="checkbox" id="en-declaration" style="width:16px;height:16px;margin-top:2px;flex-shrink:0;accent-color:var(--navy)">
+            I agree to the declaration above <span class="required">*</span>
+          </label>
+        </div>
+      </div>
+      <button class="submit-btn" onclick="submitAppeal('en')">Submit Appeal</button>
+    </div>
+
+    <!-- KHMER -->
+    <div class="lang-content" id="lang-km">
+      <div class="card">
+        <div class="notice">📋 បែបបទនេះសម្រាប់មាតាបិតាដែលត្រូវការជំនួយក្នុងការបង់ថ្លៃសាលា។ ការដាក់ស្នើទាំងអស់ត្រូវបានរក្សាជាការសំងាត់។</div>
+        <div class="section-title">ព័ត៌មានសិស្ស</div>
+        <div class="form-row">
+          <div class="field"><label>ឈ្មោះសិស្ស <span class="required">*</span></label><input type="text" id="km-student-name" placeholder="តាមកំណត់ត្រាសាលា"></div>
+          <div class="field"><label>លេខសម្គាល់សិស្ស <span class="required">*</span></label><input type="text" id="km-student-id" placeholder="ឧ. TGIS240023"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>ថ្នាក់ <span class="required">*</span></label>
+            <select id="km-grade">
+              <option value="">ជ្រើសថ្នាក់</option>
+              <option>មត្តេយ្យតូច (PN)</option><option>មត្តេយ្យ (N)</option>
+              <option>អនុបាលទី១ (K1)</option><option>អនុបាលទី២ (K2)</option>
+              <option>ថ្នាក់ទី១</option><option>ថ្នាក់ទី២</option><option>ថ្នាក់ទី៣</option>
+              <option>ថ្នាក់ទី៤</option><option>ថ្នាក់ទី៥</option><option>ថ្នាក់ទី៦</option>
+              <option>ថ្នាក់ទី៧</option><option>ថ្នាក់ទី៨</option><option>ថ្នាក់ទី៩</option>
+              <option>ថ្នាក់ទី១០</option><option>ថ្នាក់ទី១១</option><option>ថ្នាក់ទី១២</option>
+            </select>
+          </div>
+          <div class="field"><label>ឆ្នាំសិក្សា</label><input type="text" id="km-ay" value="AY 2026–27"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">ព័ត៌មានមាតាបិតា / អាណាព្យាបាល</div>
+        <div class="form-row">
+          <div class="field"><label>ឈ្មោះ <span class="required">*</span></label><input type="text" id="km-parent-name" placeholder="ឈ្មោះពេញ"></div>
+          <div class="field"><label>ទំនាក់ទំនងជាមួយសិស្ស</label>
+            <select id="km-relationship">
+              <option value="">ជ្រើស</option>
+              <option>ម្តាយ</option><option>ឪពុក</option><option>អាណាព្យាបាល</option><option>ជីដូនជីតា</option><option>ផ្សេងទៀត</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>លេខទូរស័ព្ទ <span class="required">*</span></label><input type="tel" id="km-phone" placeholder="+855 xx xxx xxxx"></div>
+          <div class="field"><label>អ៊ីម៉ែល</label><input type="email" id="km-email" placeholder="parent@email.com"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">ប្រភេទបណ្តឹងឧទ្ធរណ៍ <span class="required">*</span></div>
+        <div class="appeal-types">
+          <label class="appeal-type"><input type="checkbox" id="km-installment"><div><div class="appeal-type-label">សំណើបង់រំលស់</div><div class="appeal-type-desc">ស្នើសុំបង់ថ្លៃសាលាជាច្រើនដងតូចៗ</div></div></label>
+          <label class="appeal-type"><input type="checkbox" id="km-reduction"><div><div class="appeal-type-label">សំណើបញ្ចុះថ្លៃ</div><div class="appeal-type-desc">ស្នើសុំបញ្ចុះថ្លៃសាលារៀន</div></div></label>
+          <label class="appeal-type"><input type="checkbox" id="km-extension"><div><div class="appeal-type-label">សំណើពន្យារកាលបរិច្ឆេទ</div><div class="appeal-type-desc">ស្នើសុំពេលវេលាបន្ថែមដើម្បីបំពេញការទូទាត់</div></div></label>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">លម្អិតបណ្តឹងឧទ្ធរណ៍</div>
+        <div class="field"><label>មូលហេតុ <span class="required">*</span></label><textarea id="km-reason" placeholder="សូមពន្យល់អំពីស្ថានការណ៍ហិរញ្ញវត្ថុរបស់លោក/លោកស្រី..."></textarea></div>
+        <div class="form-row">
+          <div class="field"><label>ចំនួនដែលនៅសល់ ($)</label><input type="number" id="km-amount" placeholder="0.00" min="0" step="0.01"></div>
+          <div class="field"><label>ចំនួនដែលអាចបង់ ($)</label><input type="number" id="km-proposed" placeholder="ចំនួនដែលអាចបង់ឥឡូវ" min="0" step="0.01"></div>
+        </div>
+        <div class="field"><label>កាលបរិច្ឆេទបង់ប្រាក់ដែលស្នើ</label><input type="date" id="km-proposed-date"></div>
+        <div class="field"><label>ចំណាំបន្ថែម</label><textarea id="km-notes" placeholder="ព័ត៌មានផ្សេងទៀត..." style="min-height:70px"></textarea></div>
+      </div>
+      <div class="card" style="background:#f7f6f3">
+        <div style="font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:16px"><strong>សេចក្តីប្រកាស:</strong> ខ្ញុំសូមប្រកាសថាព័ត៌មានដែលបានផ្តល់គឺពិតប្រាកដ។ ខ្ញុំយល់ថាសាលា TG នឹងពិនិត្យពាក្យស្នើ ហើយទាក់ទងខ្ញុំក្នុងរយៈ ៣-៥ ថ្ងៃធ្វើការ។</div>
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px;color:var(--text)"><input type="checkbox" id="km-declaration" style="width:16px;height:16px;margin-top:2px;flex-shrink:0;accent-color:var(--navy)"> ខ្ញុំយល់ព្រមនឹងសេចក្តីប្រកាសខាងលើ <span class="required">*</span></label>
+      </div>
+      <button class="submit-btn" onclick="submitAppeal('km')">ដាក់ស្នើបណ្តឹងឧទ្ធរណ៍</button>
+    </div>
+
+    <!-- CHINESE -->
+    <div class="lang-content" id="lang-zh">
+      <div class="card">
+        <div class="notice">📋 本表格适用于需要学费缴纳帮助的家长。所有提交内容均属保密，将由学校管理层审核。</div>
+        <div class="section-title">学生信息</div>
+        <div class="form-row">
+          <div class="field"><label>学生全名 <span class="required">*</span></label><input type="text" id="zh-student-name" placeholder="按学校记录填写"></div>
+          <div class="field"><label>学生编号 <span class="required">*</span></label><input type="text" id="zh-student-id" placeholder="例: TGIS240023"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>年级 <span class="required">*</span></label>
+            <select id="zh-grade">
+              <option value="">选择年级</option>
+              <option>幼儿班 (PN)</option><option>幼稚园 (N)</option>
+              <option>幼儿园一年级 (K1)</option><option>幼儿园二年级 (K2)</option>
+              <option>一年级</option><option>二年级</option><option>三年级</option>
+              <option>四年级</option><option>五年级</option><option>六年级</option>
+              <option>七年级</option><option>八年级</option><option>九年级</option>
+              <option>十年级</option><option>十一年级</option><option>十二年级</option>
+            </select>
+          </div>
+          <div class="field"><label>学年</label><input type="text" id="zh-ay" value="AY 2026–27"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">家长 / 监护人信息</div>
+        <div class="form-row">
+          <div class="field"><label>家长姓名 <span class="required">*</span></label><input type="text" id="zh-parent-name" placeholder="全名"></div>
+          <div class="field"><label>与学生关系</label>
+            <select id="zh-relationship">
+              <option value="">选择</option>
+              <option>母亲</option><option>父亲</option><option>监护人</option><option>祖父母</option><option>其他</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>电话号码 <span class="required">*</span></label><input type="tel" id="zh-phone" placeholder="+855 xx xxx xxxx"></div>
+          <div class="field"><label>电子邮件</label><input type="email" id="zh-email" placeholder="parent@email.com"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">申诉类型 <span class="required">*</span></div>
+        <div class="appeal-types">
+          <label class="appeal-type"><input type="checkbox" id="zh-installment"><div><div class="appeal-type-label">分期付款申请</div><div class="appeal-type-desc">申请分多次缴纳学费</div></div></label>
+          <label class="appeal-type"><input type="checkbox" id="zh-reduction"><div><div class="appeal-type-label">学费减免申请</div><div class="appeal-type-desc">申请减少学费总金额</div></div></label>
+          <label class="appeal-type"><input type="checkbox" id="zh-extension"><div><div class="appeal-type-label">付款期限延期申请</div><div class="appeal-type-desc">申请延长付款截止日期</div></div></label>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">申诉详情</div>
+        <div class="field"><label>申诉原因 <span class="required">*</span></label><textarea id="zh-reason" placeholder="请详细说明您的经济状况以及申请援助的原因..."></textarea></div>
+        <div class="form-row">
+          <div class="field"><label>当前欠款金额 ($)</label><input type="number" id="zh-amount" placeholder="0.00" min="0" step="0.01"></div>
+          <div class="field"><label>建议付款金额 ($)</label><input type="number" id="zh-proposed" placeholder="现在可付金额" min="0" step="0.01"></div>
+        </div>
+        <div class="field"><label>建议付款日期</label><input type="date" id="zh-proposed-date"></div>
+        <div class="field"><label>补充说明</label><textarea id="zh-notes" placeholder="其他任何信息..." style="min-height:70px"></textarea></div>
+      </div>
+      <div class="card" style="background:#f7f6f3">
+        <div style="font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:16px"><strong>声明：</strong>本人声明所提供信息真实准确。本人了解TG国际学校将审核申请，并在3-5个工作日内与本人联系。</div>
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px;color:var(--text)"><input type="checkbox" id="zh-declaration" style="width:16px;height:16px;margin-top:2px;flex-shrink:0;accent-color:var(--navy)"> 我同意以上声明 <span class="required">*</span></label>
+      </div>
+      <button class="submit-btn" onclick="submitAppeal('zh')">提交申诉</button>
+    </div>
+
+  </div><!-- end appeal-form -->
+
+  <div class="footer">
+    TG International School · Member of Crestar Education Group (Singapore)<br>
+    For enquiries: admin@tgis.edu.kh
+  </div>
+</div>
+
+<script>
+const APPEALS_KEY = 'tg_appeals_v1';
+const ADMIN_EMAIL = 'admin@tgis.edu.kh';
+
+function setLang(lang) {
+  document.querySelectorAll('.lang-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.lang-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('lang-' + lang).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// Style appeal type checkboxes
+document.querySelectorAll('.appeal-type input[type=checkbox]').forEach(cb => {
+  cb.addEventListener('change', function() {
+    this.closest('.appeal-type').classList.toggle('selected', this.checked);
+  });
+});
+
+function generateRef() {
+  return 'TG-APP-' + Date.now().toString(36).toUpperCase();
+}
+
+function getAppealTypes(lang) {
+  if (lang === 'en') {
+    return [...document.querySelectorAll('#en-appeal-types input:checked')].map(cb => cb.value);
+  } else if (lang === 'km') {
+    const types = [];
+    if (document.getElementById('km-installment')?.checked) types.push('installment');
+    if (document.getElementById('km-reduction')?.checked) types.push('reduction');
+    if (document.getElementById('km-extension')?.checked) types.push('extension');
+    return types;
+  } else {
+    const types = [];
+    if (document.getElementById('zh-installment')?.checked) types.push('installment');
+    if (document.getElementById('zh-reduction')?.checked) types.push('reduction');
+    if (document.getElementById('zh-extension')?.checked) types.push('extension');
+    return types;
+  }
+}
+
+// File upload handling
+const uploadedFiles = {en:[], km:[], zh:[]};
+function handleFiles(e,lang){addFiles(Array.from(e.target.files),lang);}
+function handleDrag(e,lang){e.preventDefault();document.getElementById(lang+'-upload-zone').classList.add('dragover');}
+function handleDragLeave(e,lang){document.getElementById(lang+'-upload-zone').classList.remove('dragover');}
+function handleDrop(e,lang){e.preventDefault();document.getElementById(lang+'-upload-zone').classList.remove('dragover');addFiles(Array.from(e.dataTransfer.files),lang);}
+function addFiles(files,lang){
+  files.forEach(file=>{
+    if(uploadedFiles[lang].length>=5){alert('Maximum 5 files allowed.');return;}
+    if(file.size>5*1024*1024){alert(file.name+' exceeds 5MB limit.');return;}
+    const r=new FileReader();
+    r.onload=function(e){uploadedFiles[lang].push({name:file.name,type:file.type,size:file.size,data:e.target.result});renderFileList(lang);};
+    r.readAsDataURL(file);
+  });
+}
+function removeFile(lang,idx){uploadedFiles[lang].splice(idx,1);renderFileList(lang);}
+function renderFileList(lang){
+  const list=document.getElementById(lang+'-file-list');
+  if(!list)return;
+  list.innerHTML=uploadedFiles[lang].map((f,i)=>{
+    const isImg=f.type.startsWith('image/');
+    const size=f.size<1024*1024?Math.round(f.size/1024)+'KB':(f.size/1024/1024).toFixed(1)+'MB';
+    return `<div class="file-item"><div class="file-name">${isImg?`<img src="${f.data}" class="file-preview" alt="${f.name}">`:'<span style="font-size:24px">📄</span>'}<div><div style="font-weight:500;color:var(--text)">${f.name}</div><div style="color:var(--text3)">${size}</div></div></div><button class="file-remove" onclick="removeFile('${lang}',${i})">×</button></div>`;
+  }).join('');
+}
+
+function submitAppeal(lang) {
+  const p = id => document.getElementById(lang + '-' + id)?.value?.trim() || '';
+  const studentName = p('student-name');
+  const studentId   = p('student-id');
+  const grade       = p('grade');
+  const parentName  = p('parent-name');
+  const phone       = p('phone');
+  const reason      = p('reason');
+  const declaration = document.getElementById(lang + '-declaration')?.checked;
+  const appealTypes = getAppealTypes(lang);
+
+  // Validation
+  if (!studentName || !studentId || !grade) {
+    alert(lang==='en'?'Please fill in all student information fields.':lang==='km'?'សូមបំពេញព័ត៌មានសិស្សទាំងអស់។':'请填写所有学生信息字段。');
+    return;
+  }
+  if (!parentName || !phone) {
+    alert(lang==='en'?'Please fill in parent name and phone number.':lang==='km'?'សូមបំពេញឈ្មោះ និងលេខទូរស័ព្ទ។':'请填写家长姓名和电话号码。');
+    return;
+  }
+  if (appealTypes.length === 0) {
+    alert(lang==='en'?'Please select at least one appeal type.':lang==='km'?'សូមជ្រើសរើសប្រភេទបណ្តឹងឧទ្ធរណ៍យ៉ាងតិចមួយ។':'请至少选择一种申诉类型。');
+    return;
+  }
+  if (!reason) {
+    alert(lang==='en'?'Please provide a reason for your appeal.':lang==='km'?'សូមផ្តល់មូលហេតុ។':'请提供申诉原因。');
+    return;
+  }
+  if (!declaration) {
+    alert(lang==='en'?'Please agree to the declaration before submitting.':lang==='km'?'សូមយល់ព្រមនឹងសេចក្តីប្រកាស។':'请同意声明后再提交。');
+    return;
+  }
+
+  const ref = generateRef();
+  const files = uploadedFiles[lang].map(f=>({name:f.name,type:f.type,size:f.size,data:f.data}));
+  const appeal = {
+    ref,
+    lang,
+    submittedAt: new Date().toISOString(),
+    status: 'pending',
+    studentName, studentId, grade,
+    ay: p('ay'),
+    parentName,
+    relationship: p('relationship'),
+    phone,
+    email: p('email'),
+    appealTypes,
+    reason,
+    amount: parseFloat(p('amount'))||0,
+    proposed: parseFloat(p('proposed'))||0,
+    proposedDate: p('proposed-date'),
+    notes: p('notes'),
+    files,
+    adminNotes: '',
+    decidedAt: '',
+  };
+
+  // Save to localStorage
+  let appeals = [];
+  try { appeals = JSON.parse(localStorage.getItem(APPEALS_KEY)) || []; } catch(e) {}
+  appeals.push(appeal);
+  localStorage.setItem(APPEALS_KEY, JSON.stringify(appeals));
+
+  // Open mailto to notify admin
+  const typeLabels = {installment:'Installment Plan',reduction:'Fee Reduction',extension:'Deadline Extension'};
+  const typesStr = appealTypes.map(t=>typeLabels[t]||t).join(', ');
+  const mailto = `mailto:${ADMIN_EMAIL}?subject=Fee Appeal Submitted — ${studentName} (${studentId}) [${ref}]&body=A new fee appeal has been submitted via TG SchoolHub.%0A%0AReference: ${ref}%0AStudent: ${studentName} (${studentId})%0AGrade: ${grade}%0AParent: ${parentName}%0APhone: ${phone}%0AAppeal Type: ${typesStr}%0ASubmitted: ${new Date().toLocaleString()}%0A%0APlease log in to TG SchoolHub to review and action this appeal.`;
+  window.open(mailto);
+
+  // Show success
+  document.getElementById('appeal-form').style.display = 'none';
+  const ss = document.getElementById('success-screen');
+  ss.style.display = 'block';
+  document.getElementById('ref-number').textContent = 'Reference: ' + ref;
+
+  if (lang === 'km') {
+    document.getElementById('success-title').textContent = 'ដាក់ស្នើដោយជោគជ័យ';
+    document.getElementById('success-msg').textContent = 'អរគុណ។ ពាក្យស្នើរបស់លោក/លោកស្រីត្រូវបានទទួល។ ក្រុមការងារយើងនឹងទំនាក់ទំនងក្នុងរយៈ ៣-៥ ថ្ងៃធ្វើការ។';
+    document.getElementById('success-note').textContent = 'សូមរក្សាលេខយោងរបស់លោក/លោកស្រីសម្រាប់ការតាមដាន។';
+  } else if (lang === 'zh') {
+    document.getElementById('success-title').textContent = '申诉已提交';
+    document.getElementById('success-msg').textContent = '感谢您。您的学费申诉已收到。我们的团队将在3-5个工作日内与您联系。';
+    document.getElementById('success-note').textContent = '请保存您的参考编号以便跟进。';
+  }
+}
+</script>
+</body>
+</html>

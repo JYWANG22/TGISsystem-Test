@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Complaint Form — TG International School</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--navy:#1B2A6B;--orange:#F7931E;--bg:#f7f6f3;--surface:#fff;--border:#e2e0d8;--text:#1a1917;--text2:#6b6860;--text3:#9e9b92;--radius:10px;--danger:#c0392b;--success:#1D9E75}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.header{background:linear-gradient(135deg,#1B2A6B,#111c4e);padding:28px 20px;text-align:center;color:#fff}
+.header h1{font-size:20px;font-weight:600;margin-bottom:4px}
+.header p{font-size:13px;opacity:.7}
+.lang-bar{display:flex;justify-content:center;gap:8px;margin-top:14px;flex-wrap:wrap}
+.lang-btn{padding:5px 14px;border-radius:99px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;cursor:pointer;font-size:12px;font-family:inherit;transition:background .15s}
+.lang-btn.active{background:var(--orange);border-color:var(--orange)}
+.container{max-width:640px;margin:28px auto;padding:0 16px 40px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;margin-bottom:18px}
+.section-title{font-size:13px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.06em;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid var(--orange)}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.field input,.field select,.field textarea{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text);background:var(--surface);transition:border-color .15s,box-shadow .15s}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(27,42,107,.1)}
+.field textarea{resize:vertical;min-height:100px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cat-item{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:border-color .15s,background .15s;font-size:13px}
+.cat-item:hover{background:#f7f6f3}
+.cat-item.selected{border-color:var(--navy);background:#eef0f9}
+.cat-item input[type=radio]{accent-color:var(--navy);width:15px;height:15px;flex-shrink:0}
+.cat-icon{font-size:18px}
+.submit-btn{width:100%;padding:14px;background:var(--navy);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .15s;margin-top:8px}
+.submit-btn:hover{background:#111c4e}
+.success-screen{display:none;text-align:center;padding:40px 20px}
+.success-screen .icon{width:64px;height:64px;background:#e8f5ef;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.success-screen h2{font-size:20px;font-weight:600;color:var(--navy);margin-bottom:8px}
+.success-screen p{font-size:13px;color:var(--text2);line-height:1.6;max-width:360px;margin:0 auto}
+.ref-number{display:inline-block;margin-top:14px;padding:8px 20px;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;color:var(--navy)}
+.notice{background:#fef9ee;border:1px solid #f6e0a0;border-radius:8px;padding:12px 14px;font-size:12px;color:#b7791f;line-height:1.6;margin-bottom:16px}
+.confidential{background:#eef0f9;border:1px solid #c5cce8;border-radius:8px;padding:12px 14px;font-size:12px;color:var(--navy);line-height:1.6;margin-bottom:16px}
+.required{color:var(--danger)}
+.lang-content{display:none}
+.lang-content.active{display:block}
+.footer{text-align:center;font-size:11px;color:var(--text3);padding:20px;border-top:1px solid var(--border);margin-top:20px}
+.upload-zone{border:2px dashed var(--border);border-radius:10px;padding:24px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;position:relative}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--navy);background:#eef0f9}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-zone .upload-icon{font-size:28px;margin-bottom:8px}
+.upload-zone p{font-size:13px;color:var(--text2);margin-bottom:4px}
+.upload-zone small{font-size:11px;color:var(--text3)}
+.file-list{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.file-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-size:12px}
+.file-item .file-name{display:flex;align-items:center;gap:8px;color:var(--text2)}
+.file-item .file-remove{background:none;border:none;cursor:pointer;color:var(--danger);font-size:16px;padding:0;line-height:1}
+.file-preview{width:40px;height:40px;object-fit:cover;border-radius:5px;border:1px solid var(--border)}
+@media(max-width:500px){.form-row,.cat-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>TG International School</h1>
+  <p>Member of Crestar Education Group (Singapore)</p>
+  <div class="lang-bar">
+    <button class="lang-btn active" onclick="setLang('en',event)">English</button>
+    <button class="lang-btn" onclick="setLang('km',event)">ខ្មែរ</button>
+    <button class="lang-btn" onclick="setLang('zh',event)">中文</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- SUCCESS SCREEN -->
+  <div class="card success-screen" id="success-screen">
+    <div class="icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <h2 id="success-title">Complaint Submitted</h2>
+    <p id="success-msg">Thank you. Your complaint has been received. Our team will review it and respond within 3–5 working days.</p>
+    <div class="ref-number" id="ref-number"></div>
+    <p style="font-size:12px;color:var(--text3);margin-top:16px" id="success-note">Please save your reference number for follow-up.</p>
+  </div>
+
+  <!-- FORM -->
+  <div id="complaint-form">
+
+    <!-- ENGLISH -->
+    <div class="lang-content active" id="lang-en">
+      <div class="card">
+        <div class="confidential">🔒 Your complaint will be treated with strict confidentiality. Only authorised school management will have access to your submission.</div>
+        <div class="notice">⏱ All complaints are addressed within <strong>3–5 working days</strong>. For urgent safety concerns, please contact the school directly.</div>
+        <div class="section-title">Your Information</div>
+        <div class="form-row">
+          <div class="field"><label>Your Full Name <span class="required">*</span></label><input type="text" id="en-name" placeholder="Full name"></div>
+          <div class="field"><label>Relationship to Student <span class="required">*</span></label>
+            <select id="en-relationship">
+              <option value="">Select</option>
+              <option>Mother</option><option>Father</option><option>Guardian</option><option>Grandparent</option><option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>Phone Number <span class="required">*</span></label><input type="tel" id="en-phone" placeholder="+855 xx xxx xxxx"></div>
+          <div class="field"><label>Email Address</label><input type="email" id="en-email" placeholder="parent@email.com"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Student Information</div>
+        <div class="form-row">
+          <div class="field"><label>Student Name <span class="required">*</span></label><input type="text" id="en-student-name" placeholder="Full name"></div>
+          <div class="field"><label>Student ID</label><input type="text" id="en-student-id" placeholder="e.g. TGIS240023"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>Grade <span class="required">*</span></label>
+            <select id="en-grade">
+              <option value="">Select grade</option>
+              <option>Pre-Nursery (PN)</option><option>Nursery (N)</option>
+              <option>Kindergarten 1 (K1)</option><option>Kindergarten 2 (K2)</option>
+              <option>Grade 1</option><option>Grade 2</option><option>Grade 3</option><option>Grade 4</option>
+              <option>Grade 5</option><option>Grade 6</option><option>Grade 7</option><option>Grade 8</option>
+              <option>Grade 9</option><option>Grade 10</option><option>Grade 11</option><option>Grade 12</option>
+            </select>
+          </div>
+          <div class="field"><label>Class / Section</label><input type="text" id="en-class" placeholder="e.g. G7-A"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Complaint Category <span class="required">*</span></div>
+        <div class="cat-grid">
+          <label class="cat-item"><input type="radio" name="en-cat" value="academic"><span class="cat-icon">📚</span><span>Academic / Teaching Quality</span></label>
+          <label class="cat-item"><input type="radio" name="en-cat" value="staff"><span class="cat-icon">👤</span><span>Staff Conduct / Behaviour</span></label>
+          <label class="cat-item"><input type="radio" name="en-cat" value="facilities"><span class="cat-icon">🏫</span><span>Facilities &amp; Environment</span></label>
+          <label class="cat-item"><input type="radio" name="en-cat" value="billing"><span class="cat-icon">💳</span><span>Billing &amp; Payments</span></label>
+          <label class="cat-item"><input type="radio" name="en-cat" value="safety"><span class="cat-icon">🛡️</span><span>Safety &amp; Security</span></label>
+          <label class="cat-item"><input type="radio" name="en-cat" value="communication"><span class="cat-icon">📢</span><span>Communication Issues</span></label>
+          <label class="cat-item" style="grid-column:1/-1"><input type="radio" name="en-cat" value="other"><span class="cat-icon">📋</span><span>Other</span></label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Complaint Details</div>
+        <div class="field"><label>Date of Incident <span class="required">*</span></label><input type="date" id="en-incident-date"></div>
+        <div class="field"><label>Description of Complaint <span class="required">*</span></label>
+          <textarea id="en-description" placeholder="Please describe the issue in detail. Include dates, names of staff involved (if applicable), and what happened. The more detail you provide, the better we can investigate." style="min-height:130px"></textarea>
+        </div>
+        <div class="field"><label>What outcome are you seeking?</label>
+          <textarea id="en-outcome" placeholder="e.g. Apology, change in procedure, refund, investigation..." style="min-height:70px"></textarea>
+        </div>
+        <div class="field"><label>Has this issue been raised before?</label>
+          <select id="en-raised">
+            <option value="">Select</option>
+            <option value="no">No — this is the first time</option>
+            <option value="yes-verbal">Yes — raised verbally with staff</option>
+            <option value="yes-written">Yes — raised in writing previously</option>
+          </select>
+        </div>
+        <div class="field"><label>Supporting Evidence</label>
+          <div style="background:var(--bg);border:1px dashed var(--border);border-radius:8px;padding:14px;font-size:12px;color:var(--text3);text-align:center">
+            📎 Please bring any supporting documents, photos, or screenshots to the school office or email them to admin@tgis.edu.kh with your reference number.
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="background:#f7f6f3">
+        <div style="font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:16px">
+          <strong>Declaration:</strong> I confirm that the information provided is accurate and complete to the best of my knowledge. I understand that TG International School will investigate this complaint fairly and respond within 3–5 working days.
+        </div>
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px;color:var(--text)">
+          <input type="checkbox" id="en-declaration" style="width:16px;height:16px;margin-top:2px;flex-shrink:0;accent-color:var(--navy)">
+          I agree to the declaration above <span class="required">*</span>
+        </label>
+      </div>
+      <button class="submit-btn" onclick="submitComplaint('en')">Submit Complaint</button>
+    </div>
+
+    <!-- KHMER -->
+    <div class="lang-content" id="lang-km">
+      <div class="card">
+        <div class="confidential">🔒 ពាក្យបណ្តឹងរបស់លោក/លោកស្រីនឹងត្រូវបានរក្សាការសំងាត់យ៉ាងតឹងរ៉ឹង។ មានតែអ្នកគ្រប់គ្រងសាលាប៉ុណ្ណោះដែលអាចចូលទៅកាន់ព័ត៌មាននេះ។</div>
+        <div class="notice">⏱ ពាក្យបណ្តឹងទាំងអស់ត្រូវបានដោះស្រាយក្នុងរយៈពេល <strong>៣–៥ ថ្ងៃធ្វើការ</strong>។</div>
+        <div class="section-title">ព័ត៌មានរបស់អ្នក</div>
+        <div class="form-row">
+          <div class="field"><label>ឈ្មោះពេញ <span class="required">*</span></label><input type="text" id="km-name" placeholder="ឈ្មោះពេញ"></div>
+          <div class="field"><label>ទំនាក់ទំនងជាមួយសិស្ស <span class="required">*</span></label>
+            <select id="km-relationship"><option value="">ជ្រើស</option><option>ម្តាយ</option><option>ឪពុក</option><option>អាណាព្យាបាល</option><option>ជីដូនជីតា</option><option>ផ្សេងទៀត</option></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>លេខទូរស័ព្ទ <span class="required">*</span></label><input type="tel" id="km-phone" placeholder="+855 xx xxx xxxx"></div>
+          <div class="field"><label>អ៊ីម៉ែល</label><input type="email" id="km-email" placeholder="parent@email.com"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">ព័ត៌មានសិស្ស</div>
+        <div class="form-row">
+          <div class="field"><label>ឈ្មោះសិស្ស <span class="required">*</span></label><input type="text" id="km-student-name" placeholder="ឈ្មោះពេញ"></div>
+          <div class="field"><label>លេខសម្គាល់សិស្ស</label><input type="text" id="km-student-id" placeholder="ឧ. TGIS240023"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>ថ្នាក់ <span class="required">*</span></label>
+            <select id="km-grade"><option value="">ជ្រើសថ្នាក់</option>
+              <option>មត្តេយ្យតូច (PN)</option><option>មត្តេយ្យ (N)</option>
+              <option>អនុបាលទី១ (K1)</option><option>អនុបាលទី២ (K2)</option>
+              <option>ថ្នាក់ទី១</option><option>ថ្នាក់ទី២</option><option>ថ្នាក់ទី៣</option><option>ថ្នាក់ទី៤</option>
+              <option>ថ្នាក់ទី៥</option><option>ថ្នាក់ទី៦</option><option>ថ្នាក់ទី៧</option><option>ថ្នាក់ទី៨</option>
+              <option>ថ្នាក់ទី៩</option><option>ថ្នាក់ទី១០</option><option>ថ្នាក់ទី១១</option><option>ថ្នាក់ទី១២</option>
+            </select>
+          </div>
+          <div class="field"><label>ថ្នាក់រៀន</label><input type="text" id="km-class" placeholder="ឧ. G7-A"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">ប្រភេទពាក្យបណ្តឹង <span class="required">*</span></div>
+        <div class="cat-grid">
+          <label class="cat-item"><input type="radio" name="km-cat" value="academic"><span class="cat-icon">📚</span><span>គុណភាពការបង្រៀន</span></label>
+          <label class="cat-item"><input type="radio" name="km-cat" value="staff"><span class="cat-icon">👤</span><span>អាកប្បកិរិយាបុគ្គលិក</span></label>
+          <label class="cat-item"><input type="radio" name="km-cat" value="facilities"><span class="cat-icon">🏫</span><span>សម្ភារៈ &amp; បរិស្ថាន</span></label>
+          <label class="cat-item"><input type="radio" name="km-cat" value="billing"><span class="cat-icon">💳</span><span>ការទូទាត់ &amp; វិក្កយបត្រ</span></label>
+          <label class="cat-item"><input type="radio" name="km-cat" value="safety"><span class="cat-icon">🛡️</span><span>សុវត្ថិភាព</span></label>
+          <label class="cat-item"><input type="radio" name="km-cat" value="communication"><span class="cat-icon">📢</span><span>បញ្ហាទំនាក់ទំនង</span></label>
+          <label class="cat-item" style="grid-column:1/-1"><input type="radio" name="km-cat" value="other"><span class="cat-icon">📋</span><span>ផ្សេងទៀត</span></label>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">លម្អិតពាក្យបណ្តឹង</div>
+        <div class="field"><label>កាលបរិច្ឆេទនៃហេតុការណ៍ <span class="required">*</span></label><input type="date" id="km-incident-date"></div>
+        <div class="field"><label>ការពិពណ៌នា <span class="required">*</span></label><textarea id="km-description" placeholder="សូមពណ៌នាអំពីបញ្ហាលម្អិត..." style="min-height:130px"></textarea></div>
+        <div class="field"><label>លទ្ធផលដែលអ្នករំពឹង</label><textarea id="km-outcome" placeholder="ឧ. សុំការអភ័យទោស, ការស៊ើបអង្កេត..." style="min-height:70px"></textarea></div>
+        <div class="field"><label>តើបញ្ហានេះធ្លាប់លើកឡើងពីមុនទេ?</label>
+          <select id="km-raised"><option value="">ជ្រើស</option><option value="no">ទេ — លើកដំបូង</option><option value="yes-verbal">បាទ/ចាស — លើកឡើងផ្ទាល់មាត់</option><option value="yes-written">បាទ/ចាស — លើកឡើងជាលាយលក្ខណ៍អក្សរ</option></select>
+        </div>
+      </div>
+      <div class="card" style="background:#f7f6f3">
+        <div style="font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:16px"><strong>សេចក្តីប្រកាស:</strong> ខ្ញុំបញ្ជាក់ថាព័ត៌មានដែលបានផ្តល់គឺត្រឹមត្រូវ។ ខ្ញុំយល់ថាសាលា TG នឹងស៊ើបអង្កេតដោយយុត្តិធម៌ ហើយឆ្លើយតបក្នុងរយៈ ៣-៥ ថ្ងៃធ្វើការ។</div>
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px;color:var(--text)"><input type="checkbox" id="km-declaration" style="width:16px;height:16px;margin-top:2px;flex-shrink:0;accent-color:var(--navy)"> ខ្ញុំយល់ព្រមនឹងសេចក្តីប្រកាស <span class="required">*</span></label>
+      </div>
+      <button class="submit-btn" onclick="submitComplaint('km')">ដាក់ស្នើពាក្យបណ្តឹង</button>
+    </div>
+
+    <!-- CHINESE -->
+    <div class="lang-content" id="lang-zh">
+      <div class="card">
+        <div class="confidential">🔒 您的投诉将被严格保密，只有授权的学校管理人员才能查阅您的提交内容。</div>
+        <div class="notice">⏱ 所有投诉将在 <strong>3–5个工作日</strong> 内处理。</div>
+        <div class="section-title">您的信息</div>
+        <div class="form-row">
+          <div class="field"><label>您的全名 <span class="required">*</span></label><input type="text" id="zh-name" placeholder="全名"></div>
+          <div class="field"><label>与学生的关系 <span class="required">*</span></label>
+            <select id="zh-relationship"><option value="">选择</option><option>母亲</option><option>父亲</option><option>监护人</option><option>祖父母</option><option>其他</option></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>电话号码 <span class="required">*</span></label><input type="tel" id="zh-phone" placeholder="+855 xx xxx xxxx"></div>
+          <div class="field"><label>电子邮件</label><input type="email" id="zh-email" placeholder="parent@email.com"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">学生信息</div>
+        <div class="form-row">
+          <div class="field"><label>学生姓名 <span class="required">*</span></label><input type="text" id="zh-student-name" placeholder="全名"></div>
+          <div class="field"><label>学生编号</label><input type="text" id="zh-student-id" placeholder="例: TGIS240023"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>年级 <span class="required">*</span></label>
+            <select id="zh-grade"><option value="">选择年级</option>
+              <option>幼儿班 (PN)</option><option>幼稚园 (N)</option>
+              <option>幼儿园一年级 (K1)</option><option>幼儿园二年级 (K2)</option>
+              <option>一年级</option><option>二年级</option><option>三年级</option><option>四年级</option>
+              <option>五年级</option><option>六年级</option><option>七年级</option><option>八年级</option>
+              <option>九年级</option><option>十年级</option><option>十一年级</option><option>十二年级</option>
+            </select>
+          </div>
+          <div class="field"><label>班级</label><input type="text" id="zh-class" placeholder="例: G7-A"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">投诉类别 <span class="required">*</span></div>
+        <div class="cat-grid">
+          <label class="cat-item"><input type="radio" name="zh-cat" value="academic"><span class="cat-icon">📚</span><span>学术 / 教学质量</span></label>
+          <label class="cat-item"><input type="radio" name="zh-cat" value="staff"><span class="cat-icon">👤</span><span>员工行为</span></label>
+          <label class="cat-item"><input type="radio" name="zh-cat" value="facilities"><span class="cat-icon">🏫</span><span>设施与环境</span></label>
+          <label class="cat-item"><input type="radio" name="zh-cat" value="billing"><span class="cat-icon">💳</span><span>账单与付款</span></label>
+          <label class="cat-item"><input type="radio" name="zh-cat" value="safety"><span class="cat-icon">🛡️</span><span>安全与保障</span></label>
+          <label class="cat-item"><input type="radio" name="zh-cat" value="communication"><span class="cat-icon">📢</span><span>沟通问题</span></label>
+          <label class="cat-item" style="grid-column:1/-1"><input type="radio" name="zh-cat" value="other"><span class="cat-icon">📋</span><span>其他</span></label>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">投诉详情</div>
+        <div class="field"><label>事件日期 <span class="required">*</span></label><input type="date" id="zh-incident-date"></div>
+        <div class="field"><label>投诉描述 <span class="required">*</span></label><textarea id="zh-description" placeholder="请详细描述问题，包括日期、涉及的员工姓名（如适用）以及发生的情况..." style="min-height:130px"></textarea></div>
+        <div class="field"><label>您期望的结果</label><textarea id="zh-outcome" placeholder="例如：道歉、程序变更、退款、调查..." style="min-height:70px"></textarea></div>
+        <div class="field"><label>此问题以前是否已提出过?</label>
+          <select id="zh-raised"><option value="">选择</option><option value="no">否 — 首次提出</option><option value="yes-verbal">是 — 曾口头提出</option><option value="yes-written">是 — 曾以书面形式提出</option></select>
+        </div>
+      </div>
+      <div class="card" style="background:#f7f6f3">
+        <div style="font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:16px"><strong>声明：</strong>本人确认所提供信息真实完整。本人了解TG国际学校将公平调查此投诉，并在3-5个工作日内回复。</div>
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px;color:var(--text)"><input type="checkbox" id="zh-declaration" style="width:16px;height:16px;margin-top:2px;flex-shrink:0;accent-color:var(--navy)"> 我同意以上声明 <span class="required">*</span></label>
+      </div>
+      <button class="submit-btn" onclick="submitComplaint('zh')">提交投诉</button>
+    </div>
+
+  </div><!-- end complaint-form -->
+
+  <div class="footer">
+    TG International School · Member of Crestar Education Group (Singapore)<br>
+    For enquiries: admin@tgis.edu.kh
+  </div>
+</div>
+
+<script>
+const COMPLAINTS_KEY = 'tg_complaints_v1';
+const ADMIN_EMAIL = 'admin@tgis.edu.kh';
+
+function setLang(lang, e) {
+  document.querySelectorAll('.lang-content').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.lang-btn').forEach(el=>el.classList.remove('active'));
+  document.getElementById('lang-'+lang).classList.add('active');
+  if(e && e.target) e.target.classList.add('active');
+}
+
+document.querySelectorAll('.cat-item input[type=radio]').forEach(rb=>{
+  rb.addEventListener('change',function(){
+    document.querySelectorAll(`[name="${this.name}"]`).forEach(r=>r.closest('.cat-item').classList.remove('selected'));
+    this.closest('.cat-item').classList.add('selected');
+  });
+});
+
+function generateRef(){ return 'TG-CMP-'+Date.now().toString(36).toUpperCase(); }
+
+const CAT_LABELS = {academic:'Academic / Teaching Quality',staff:'Staff Conduct / Behaviour',facilities:'Facilities & Environment',billing:'Billing & Payments',safety:'Safety & Security',communication:'Communication Issues',other:'Other'};
+
+// File upload handling
+const uploadedFiles = {en:[], km:[], zh:[]};
+
+function handleFiles(event, lang) {
+  const files = Array.from(event.target.files);
+  addFiles(files, lang);
+}
+
+function handleDrag(event, lang) {
+  event.preventDefault();
+  document.getElementById(lang+'-upload-zone').classList.add('dragover');
+}
+
+function handleDragLeave(event, lang) {
+  document.getElementById(lang+'-upload-zone').classList.remove('dragover');
+}
+
+function handleDrop(event, lang) {
+  event.preventDefault();
+  document.getElementById(lang+'-upload-zone').classList.remove('dragover');
+  const files = Array.from(event.dataTransfer.files);
+  addFiles(files, lang);
+}
+
+function addFiles(files, lang) {
+  const maxFiles = 5;
+  const maxSize  = 5 * 1024 * 1024; // 5MB
+  files.forEach(file => {
+    if (uploadedFiles[lang].length >= maxFiles) {
+      alert('Maximum 5 files allowed.'); return;
+    }
+    if (file.size > maxSize) {
+      alert(`${file.name} is too large. Maximum file size is 5MB.`); return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      uploadedFiles[lang].push({ name: file.name, type: file.type, size: file.size, data: e.target.result });
+      renderFileList(lang);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function removeFile(lang, idx) {
+  uploadedFiles[lang].splice(idx, 1);
+  renderFileList(lang);
+}
+
+function renderFileList(lang) {
+  const list = document.getElementById(lang+'-file-list');
+  if (!list) return;
+  list.innerHTML = uploadedFiles[lang].map((f, i) => {
+    const isImg = f.type.startsWith('image/');
+    const size  = f.size < 1024*1024 ? Math.round(f.size/1024)+'KB' : (f.size/1024/1024).toFixed(1)+'MB';
+    return `<div class="file-item">
+      <div class="file-name">
+        ${isImg ? `<img src="${f.data}" class="file-preview" alt="${f.name}">` : '<span style="font-size:24px">📄</span>'}
+        <div><div style="font-weight:500;color:var(--text)">${f.name}</div><div style="color:var(--text3)">${size}</div></div>
+      </div>
+      <button class="file-remove" onclick="removeFile('${lang}',${i})" title="Remove">×</button>
+    </div>`;
+  }).join('');
+}
+
+function submitComplaint(lang) {
+  const p = id => document.getElementById(lang+'-'+id)?.value?.trim()||'';
+  const name        = p('name');
+  const relationship= p('relationship');
+  const phone       = p('phone');
+  const studentName = p('student-name');
+  const grade       = p('grade');
+  const description = p('description');
+  const incidentDate= p('incident-date');
+  const category    = document.querySelector(`[name="${lang}-cat"]:checked`)?.value||'';
+  const declaration = document.getElementById(lang+'-declaration')?.checked;
+
+  if(!name||!phone||!relationship){ alert(lang==='en'?'Please fill in your name, relationship and phone number.':lang==='km'?'សូមបំពេញឈ្មោះ ទំនាក់ទំនង និងលេខទូរស័ព្ទ។':'请填写姓名、关系和电话号码。'); return; }
+  if(!studentName||!grade){ alert(lang==='en'?'Please fill in the student name and grade.':lang==='km'?'សូមបំពេញឈ្មោះ និងថ្នាក់សិស្ស។':'请填写学生姓名和年级。'); return; }
+  if(!category){ alert(lang==='en'?'Please select a complaint category.':lang==='km'?'សូមជ្រើសរើសប្រភេទពាក្យបណ្តឹង។':'请选择投诉类别。'); return; }
+  if(!incidentDate){ alert(lang==='en'?'Please enter the date of the incident.':lang==='km'?'សូមបញ្ចូលកាលបរិច្ឆេទ។':'请输入事件日期。'); return; }
+  if(!description){ alert(lang==='en'?'Please describe your complaint.':lang==='km'?'សូមពណ៌នាអំពីពាក្យបណ្តឹង។':'请描述您的投诉。'); return; }
+  if(!declaration){ alert(lang==='en'?'Please agree to the declaration.':lang==='km'?'សូមយល់ព្រមនឹងសេចក្តីប្រកាស។':'请同意声明。'); return; }
+
+  const ref = generateRef();
+  const files = uploadedFiles[lang].map(f=>({name:f.name,type:f.type,size:f.size,data:f.data}));
+  const complaint = {
+    ref, lang,
+    submittedAt: new Date().toISOString(),
+    status: 'open',
+    name, relationship, phone,
+    email: p('email'),
+    studentName,
+    studentId: p('student-id'),
+    grade,
+    class: p('class'),
+    category,
+    incidentDate,
+    description,
+    outcome: p('outcome'),
+    raised: p('raised'),
+    files,
+    adminNotes: '',
+    decidedAt: '',
+  };
+
+  let complaints = [];
+  try{ complaints=JSON.parse(localStorage.getItem(COMPLAINTS_KEY))||[]; }catch(e){}
+  complaints.push(complaint);
+  localStorage.setItem(COMPLAINTS_KEY, JSON.stringify(complaints));
+
+  // mailto notification
+  const mailto = `mailto:${ADMIN_EMAIL}?subject=Complaint Submitted — ${studentName} [${ref}]&body=A new complaint has been submitted via TG SchoolHub.%0A%0AReference: ${ref}%0ACategory: ${CAT_LABELS[category]||category}%0AStudent: ${studentName} (Grade: ${grade})%0AParent: ${name} — ${phone}%0AIncident date: ${incidentDate}%0ASubmitted: ${new Date().toLocaleString()}%0A%0APlease log in to TG SchoolHub to review this complaint.`;
+  window.open(mailto);
+
+  document.getElementById('complaint-form').style.display='none';
+  document.getElementById('success-screen').style.display='block';
+  document.getElementById('ref-number').textContent='Reference: '+ref;
+  if(lang==='km'){ document.getElementById('success-title').textContent='ដាក់ស្នើដោយជោគជ័យ'; document.getElementById('success-msg').textContent='អរគុណ។ ពាក្យបណ្តឹងរបស់លោក/លោកស្រីត្រូវបានទទួល។ ក្រុមការងារនឹងឆ្លើយតបក្នុងរយៈ ៣-៥ ថ្ងៃធ្វើការ។'; document.getElementById('success-note').textContent='សូមរក្សាលេខយោង។'; }
+  else if(lang==='zh'){ document.getElementById('success-title').textContent='投诉已提交'; document.getElementById('success-msg').textContent='感谢您。您的投诉已收到。我们的团队将在3-5个工作日内回复您。'; document.getElementById('success-note').textContent='请保存您的参考编号。'; }
+}
+</script>
+</body>
+</html>
