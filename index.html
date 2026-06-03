@@ -201,7 +201,7 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--text2
     <div class="login-error" id="login-error"></div>
     <div class="login-title">TG SchoolHub</div>
     <div class="login-sub">Student Management System<br>Sign in with your TG work account to continue</div>
-    <button class="ms-btn" onclick="signIn()" id="ms-login-btn">
+    <button class="ms-btn" onclick="signIn()" id="ms-login-btn" disabled style="opacity:.6;cursor:not-allowed">
       <svg width="20" height="20" viewBox="0 0 21 21" fill="none">
         <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
         <rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
@@ -210,7 +210,7 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--text2
       </svg>
       Sign in with Microsoft
     </button>
-    <div class="login-loading" id="login-loading">Signing you in…</div>
+    <div class="login-loading" id="login-loading" style="display:block">Loading authentication…</div>
   </div>
   <div class="login-footer">TG International School · Member of Crestar Education Group</div>
 </div>
@@ -1888,14 +1888,28 @@ let msalInstance = null;
 let currentUser  = null;
 let currentRole  = null;
 
+let msalReady = false;
+
 async function initMSAL() {
   try {
     msalInstance = new msal.PublicClientApplication(msalConfig);
     await msalInstance.initialize();
+    msalReady = true;
+    // Enable the login button now that MSAL is ready
+    const btn = document.getElementById('ms-login-btn');
+    const loadingEl = document.getElementById('login-loading');
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer'; }
+    if (loadingEl) loadingEl.style.display = 'none';
 
-    // Handle redirect response
-    const response = await msalInstance.handleRedirectPromise();
-    if (response) {
+    // Handle redirect response first
+    let response = null;
+    try {
+      response = await msalInstance.handleRedirectPromise();
+    } catch(redirectErr) {
+      console.warn('Redirect handling error:', redirectErr);
+    }
+
+    if (response && response.account) {
       handleLoginSuccess(response);
       return;
     }
@@ -1911,14 +1925,23 @@ async function initMSAL() {
     }
   } catch(err) {
     console.error('MSAL init error:', err);
+    msalReady = false;
     showLogin();
+    showLoginError('Authentication service failed to load. Please refresh the page.');
   }
 }
 
 async function signIn() {
+  document.getElementById('login-error').style.display = 'none';
+
+  if (!msalReady || !msalInstance) {
+    showLoginError('Authentication is still loading. Please wait a moment and try again.');
+    return;
+  }
+
   document.getElementById('login-loading').style.display = 'block';
   document.getElementById('ms-login-btn').disabled = true;
-  document.getElementById('login-error').style.display = 'none';
+
   try {
     await msalInstance.loginRedirect({
       scopes: ['openid','profile','email','User.Read'],
@@ -1927,7 +1950,12 @@ async function signIn() {
   } catch(err) {
     document.getElementById('login-loading').style.display = 'none';
     document.getElementById('ms-login-btn').disabled = false;
-    showLoginError('Sign in failed: ' + (err.message||'Unknown error'));
+    // Provide clear error messages
+    let msg = 'Sign in failed. Please try again.';
+    if (err.message && err.message.includes('popup_window_error')) msg = 'Popup was blocked. Please allow popups for this site.';
+    else if (err.message && err.message.includes('user_cancelled')) msg = 'Sign in was cancelled.';
+    else if (err.message) msg = 'Sign in failed: ' + err.message;
+    showLoginError(msg);
   }
 }
 
