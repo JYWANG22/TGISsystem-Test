@@ -165,7 +165,32 @@ label.field-label{display:block;font-size:11px;font-weight:600;color:var(--text2
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+<script>
+// Load MSAL dynamically with fallback
+(function() {
+  function loadScript(src, cb) {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = cb;
+    s.onerror = function() {
+      console.error('Failed to load MSAL from:', src);
+      document.getElementById('login-loading').style.display = 'none';
+      const btn = document.getElementById('ms-login-btn');
+      if(btn){ btn.disabled=false; btn.style.opacity='1'; btn.style.cursor='pointer'; }
+      document.getElementById('login-error').textContent = 'Authentication library failed to load. Check your internet connection and refresh.';
+      document.getElementById('login-error').style.display = 'block';
+    };
+    document.head.appendChild(s);
+  }
+  // Primary CDN
+  loadScript('https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js', function() {
+    if(typeof msal !== 'undefined') {
+      window._msalLoaded = true;
+      if(window._msalReadyCb) window._msalReadyCb();
+    }
+  });
+})();
+</script>
 <style>
 /* Login screen */
 .login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#1B2A6B 0%,#111c4e 60%,#0d1535 100%);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column}
@@ -1890,7 +1915,28 @@ let currentRole  = null;
 
 let msalReady = false;
 
+function waitForMSAL(cb) {
+  if (typeof msal !== 'undefined') { cb(); return; }
+  // Wait up to 10 seconds for MSAL to load
+  let attempts = 0;
+  const interval = setInterval(function() {
+    attempts++;
+    if (typeof msal !== 'undefined') {
+      clearInterval(interval);
+      cb();
+    } else if (attempts > 100) {
+      clearInterval(interval);
+      showLoginError('Microsoft authentication library could not be loaded. Please check your internet connection and refresh.');
+      const btn = document.getElementById('ms-login-btn');
+      const loadEl = document.getElementById('login-loading');
+      if(btn){ btn.disabled=false; btn.style.opacity='1'; btn.style.cursor='pointer'; }
+      if(loadEl) loadEl.style.display='none';
+    }
+  }, 100);
+}
+
 async function initMSAL() {
+  waitForMSAL(async function() {
   try {
     msalInstance = new msal.PublicClientApplication(msalConfig);
     await msalInstance.initialize();
@@ -1927,8 +1973,13 @@ async function initMSAL() {
     console.error('MSAL init error:', err);
     msalReady = false;
     showLogin();
-    showLoginError('Authentication service failed to load. Please refresh the page.');
+    showLoginError('Authentication service failed to load. Please refresh the page and try again.');
+    const btn = document.getElementById('ms-login-btn');
+    const loadEl = document.getElementById('login-loading');
+    if(btn){ btn.disabled=false; btn.style.opacity='1'; btn.style.cursor='pointer'; }
+    if(loadEl) loadEl.style.display='none';
   }
+  }); // end waitForMSAL
 }
 
 async function signIn() {
